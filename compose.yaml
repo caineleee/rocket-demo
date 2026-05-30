@@ -1,0 +1,107 @@
+services:
+  mysql:
+    image: mysql:8.0
+    # 环境变量配置
+    environment:
+      # MySQL root 用户密码
+      MYSQL_ROOT_PASSWORD: root
+      # 默认创建的数据库名称
+      MYSQL_DATABASE: rocket-demo-db
+
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      # 主从复制配置
+#      MYSQL_REPLICATION_USER: root
+#      MYSQL_REPLICATION_PASSWORD: root
+    # 数据卷挂载
+    volumes:
+      # 挂载 MySQL 数据目录以实现数据持久化
+      - mysql-data:/var/lib/mysql
+      # 挂载主从复制配置
+#      - ./mysql/master/conf.d:/etc/mysql/conf.d
+    # 重启策略
+    restart: unless-stopped
+    # 端口映射 (主机端口:容器端口)
+    ports:
+      - "3306:3306"
+    # MySQL 启动命令参数
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      # 设置服务器默认字符集, 所有新建数据库和表默认使用 utf8mb4 字符集
+      - --character-set-server=utf8mb4
+      # 置服务器默认的排序规则 unicode_ci 表示基于 Unicode 标准的排序,ci 表示 case-insensitive(不区分大小写)
+      # 影响字符串比较、排序、索引等操作, 与字符集配置配套使用
+      - --collation-server=utf8mb4_unicode_ci
+      # 跳过客户端字符集协商,强制使用服务器字符集 不管客户端声明什么字符集,服务器都强制使用 utf8mb4 避免因客户端字符集设置不当导致的乱码问题
+      - --skip-character-set-client-handshake
+      # 每个新连接建立时自动执行的初始化命令 确保连接层面的字符集一致性
+      - --init-connect=SET NAMES utf8mb4
+      # 设置连接的排序规则 为每个新连接设置 collation_connection 变量 确保排序规则与字符集配置保持一致
+      - --init-connect=SET collation_connection = utf8mb4_unicode_ci
+      # 启用慢查询日志功能 1 表示开启,0 表示关闭
+      - --slow-query-log=1
+      # 指定慢查询日志的存储位置
+      - --slow-query-log-file=/var/log/mysql/slow.log
+      # 定义"慢查询"的时间标准为2秒
+      - --long-query-time=2
+      # 记录所有没有使用索引的查询 即使执行时间未超过阈值,未使用索引的查询也会被记录 注意: 开发环境有用,生产环境可能产生大量日志
+      - --log-queries-not-using-indexes=1
+      # 设置日志输出目标 文件方式性能更好,占用资源更少 可选值: FILE, TABLE, NONE
+      - --log-output=FILE
+      # 主从复制相关配置
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=row
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --require-secure-transport=OFF  # 禁用安全传输要求
+    # 健康检查配置
+    healthcheck:
+      # 健康检查命令
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
+      # 检查间隔
+      interval: 30s
+      # 超时时间
+      timeout: 10s
+      # 重试次数
+      retries: 3
+      start_period: 40s
+    networks:
+      - rocket-demo-net
+
+  namesrv:
+    image: apache/rocketmq:5.3.0
+    command: sh mqnamesrv
+    ports:
+      - '9876:9876'
+    networks:
+      - rocket-demo-net
+
+  broker:
+    image: apache/rocketmq:5.3.0
+    command: sh mqbroker -n namesrv:9876
+    depends_on:
+      - namesrv
+    ports:
+      - '10909:10909'
+      - '10911:10911'
+      - '10912:10912'
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    networks:
+      - rocket-demo-net
+
+# 数据卷定义
+volumes:
+  # MySQL 数据卷
+  mysql-data:
+
+
+networks:
+  rocket-demo-net:
+    # 网络驱动类型
+    driver: bridge
+    # IP地址管理配置
+    ipam:
+      # IPAM驱动
+      driver: default
