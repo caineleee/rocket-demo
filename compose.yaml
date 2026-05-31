@@ -1,4 +1,5 @@
 services:
+  # ==================== MySQL ====================
   mysql:
     image: mysql:8.0
     # 环境变量配置
@@ -69,39 +70,176 @@ services:
     networks:
       - rocket-demo-net
 
-  namesrv:
-    image: apache/rocketmq:5.3.0
+  # ==================== RocketMQ NameServer 集群 (3个) ====================
+  namesrv-1:
+    image: apache/rocketmq:5.4.0
+    container_name: rmq-namesrv-1
     command: sh mqnamesrv
     ports:
-      - '9876:9876'
+      - "9876:9876"
+    volumes:
+      - ./data/namesrv/logs-1:/home/rocketmq/logs
     networks:
       - rocket-demo-net
 
-  broker:
-    image: apache/rocketmq:5.3.0
-    command: sh mqbroker -n namesrv:9876
-    depends_on:
-      - namesrv
+#  namesrv-2:
+#    image: apache/rocketmq:5.4.0
+#    container_name: rmq-namesrv-2
+#    command: sh mqnamesrv
+#    ports:
+#      - "9877:9876"
+#    volumes:
+#      - ./data/namesrv/logs-2:/home/rocketmq/logs
+#    networks:
+#      - rocket-demo-net
+#
+#  namesrv-3:
+#    image: apache/rocketmq:5.4.0
+#    container_name: rmq-namesrv-3
+#    command: sh mqnamesrv
+#    ports:
+#      - "9878:9876"
+#    volumes:
+#      - ./data/namesrv/logs-3:/home/rocketmq/logs
+#    networks:
+#      - rocket-demo-net
+
+  # ==================== RocketMQ Broker A (Master & Slave) ====================
+  broker-a-master:
+    image: apache/rocketmq:5.4.0
+    container_name: rmq-broker-a-m
     ports:
-      - '10909:10909'
-      - '10911:10911'
-      - '10912:10912'
+      - "10911:10911"
+      - "10909:10909"
+    volumes:
+      - ./data/broker-a/master/store:/home/rocketmq/store
     environment:
-      - NAMESRV_ADDR=namesrv:9876
+      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+      JAVA_OPT_EXT: >-
+        -DbrokerClusterName=RocketCluster 
+        -DbrokerName=broker-a 
+        -DbrokerId=0 
+        -DbrokerRole=ASYNC_MASTER 
+        -DflushDiskType=ASYNC_FLUSH 
+        -DautoCreateTopicEnable=true 
+        -DlistenPort=10911 
+        -DstorePathRootDir=/home/rocketmq/store/a-master 
+        -DbrokerIP1=192.168.2.74
+    command: sh mqbroker
+    depends_on:
+      - namesrv-1
+#      - namesrv-2
+#      - namesrv-3
     networks:
       - rocket-demo-net
+
+#  broker-a-slave:
+#    image: apache/rocketmq:5.4.0
+#    container_name: rmq-broker-a-s
+#    ports:
+#      - "11911:10911"
+#      - "11909:10909"
+#    volumes:
+#      - ./data/broker-a/slave/store:/home/rocketmq/store
+#    environment:
+#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+#      JAVA_OPT_EXT: >-
+#        -DbrokerClusterName=RocketCluster
+#        -DbrokerName=broker-a
+#        -DbrokerId=1
+#        -DbrokerRole=SLAVE
+#        -DflushDiskType=ASYNC_FLUSH
+#        -DautoCreateTopicEnable=true
+#        -DlistenPort=10911
+#        -DstorePathRootDir=/home/rocketmq/store/a-slave
+#        -DbrokerIP1=192.168.2.74
+#    command: sh mqbroker
+#    depends_on:
+#      - namesrv-1
+#      - namesrv-2
+#      - namesrv-3
+#    networks:
+#      - rocket-demo-net
+#
+#  # ==================== RocketMQ Broker B (Master & Slave) ====================
+#  broker-b-master:
+#    image: apache/rocketmq:5.4.0
+#    container_name: rmq-broker-b-m
+#    ports:
+#      - "20911:10911"
+#      - "20909:10909"
+#    volumes:
+#      - ./data/broker-b/master/store:/home/rocketmq/store
+#    environment:
+#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+#      JAVA_OPT_EXT: >-
+#        -DbrokerClusterName=RocketCluster
+#        -DbrokerName=broker-b
+#        -DbrokerId=0
+#        -DbrokerRole=ASYNC_MASTER
+#        -DflushDiskType=ASYNC_FLUSH
+#        -DautoCreateTopicEnable=true
+#        -DlistenPort=10911
+#        -DstorePathRootDir=/home/rocketmq/store/b-master
+#        -DbrokerIP1=192.168.2.74
+#    command: sh mqbroker
+#    depends_on:
+#      - namesrv-1
+#      - namesrv-2
+#      - namesrv-3
+#    networks:
+#      - rocket-demo-net
+#
+#  broker-b-slave:
+#    image: apache/rocketmq:5.4.0
+#    container_name: rmq-broker-b-s
+#    ports:
+#      - "21911:10911"
+#      - "21909:10909"
+#    volumes:
+#      - ./data/broker-b/slave/store:/home/rocketmq/store
+#    environment:
+#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+#      JAVA_OPT_EXT: >-
+#        -DbrokerClusterName=RocketCluster
+#        -DbrokerName=broker-b
+#        -DbrokerId=1
+#        -DbrokerRole=SLAVE
+#        -DflushDiskType=ASYNC_FLUSH
+#        -DautoCreateTopicEnable=true
+#        -DlistenPort=10911
+#        -DstorePathRootDir=/home/rocketmq/store/b-slave
+#        -DbrokerIP1=192.168.2.74
+#    command: sh mqbroker
+#    depends_on:
+#      - namesrv-1
+#      - namesrv-2
+#      - namesrv-3
+#    networks:
+#      - rocket-demo-net
+
+  # ==================== RocketMQ Dashboard 可视化控制台 ====================
+  dashboard:
+    image: apacherocketmq/rocketmq-dashboard:2.0.0
+    container_name: rmq-dashboard
+    ports:
+      - "9090:8080"
+    environment:
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+    depends_on:
+      - namesrv-1
+#      - namesrv-2
+#      - namesrv-3
+    networks:
+      - rocket-demo-net
+
+# ==================== 自定义网络 ====================
+networks:
+  rocket-demo-net:
+    driver: bridge
 
 # 数据卷定义
 volumes:
   # MySQL 数据卷
   mysql-data:
 
-
-networks:
-  rocket-demo-net:
-    # 网络驱动类型
-    driver: bridge
-    # IP地址管理配置
-    ipam:
-      # IPAM驱动
-      driver: default
