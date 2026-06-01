@@ -115,8 +115,8 @@ services:
       - ./data/broker-a/master/store:/home/rocketmq/store
       - ./data/broker-a/master/conf/broker.conf:/home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     environment:
-#      NAMESRV_ADDR: "192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
-      NAMESRV_ADDR: "192.168.2.74:9876"
+#      NAMESRV_ADDR: "192.168.5.22:9876;192.168.5.22:9877;192.168.5.22:9878"
+      NAMESRV_ADDR: "192.168.5.22:9876"
     command: sh mqbroker -c /home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     depends_on:
       - namesrv-1
@@ -217,12 +217,51 @@ services:
     ports:
       - "9090:8080"
     environment:
-#      JAVA_OPTS: "-Drocketmq.namesrv.addr=192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
-      JAVA_OPTS: "-Drocketmq.namesrv.addr=192.168.2.74:9876"
+#      JAVA_OPTS: "-Drocketmq.namesrv.addr=localhost:9876"
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=namesrv-1:9876"
     depends_on:
       - namesrv-1
 #      - namesrv-2
 #      - namesrv-3
+    networks:
+      - rocket-demo-net
+
+
+
+  # ==================== Zookeeper (Dubbo 传统注册中心) ====================
+  zookeeper:
+    image: zookeeper:3.8.4
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    volumes:
+      - ./data/zookeeper/data:/data
+      - ./data/zookeeper/datalog:/datalog
+    environment:
+      ZOO_MY_ID: 1
+    restart: unless-stopped
+    networks:
+      - rocket-demo-net
+
+  # ==================== Nacos (新一代注册/配置中心) ====================
+  nacos:
+    image: nacos/nacos-server:v2.4.0
+    container_name: nacos
+    ports:
+      - "8848:8848"   # HTTP 端口 / 控制台访问端口
+      - "9848:9848"   # gRPC 通信端口 (Nacos 2.x 核心端口，必须映射)
+      - "9849:9849"   # gRPC 集群通信端口
+    environment:
+      MODE: standalone              # 强制以单机模式启动
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 512m                 # 初始堆内存
+      JVM_XMX: 512m                 # 最大堆内存
+    volumes:
+      - ./data/nacos/logs:/home/nacos/logs
+      - ./data/nacos/data:/home/nacos/data
+    restart: unless-stopped
+    depends_on:
+      - mysql                       # 生产环境通常依赖MySQL持久化，这里先挂载数据卷即可
     networks:
       - rocket-demo-net
 
@@ -235,4 +274,6 @@ networks:
 volumes:
   # MySQL 数据卷
   mysql-data:
+  zookeeper-data: # 如果前面没有声明，建议在这里补上命名卷的声明
+  nacos-data:
 
