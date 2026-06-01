@@ -113,19 +113,11 @@ services:
       - "10909:10909"
     volumes:
       - ./data/broker-a/master/store:/home/rocketmq/store
+      - ./data/broker-a/master/conf/broker.conf:/home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     environment:
-      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
-      JAVA_OPT_EXT: >-
-        -DbrokerClusterName=RocketCluster 
-        -DbrokerName=broker-a 
-        -DbrokerId=0 
-        -DbrokerRole=ASYNC_MASTER 
-        -DflushDiskType=ASYNC_FLUSH 
-        -DautoCreateTopicEnable=true 
-        -DlistenPort=10911 
-        -DstorePathRootDir=/home/rocketmq/store/a-master 
-        -DbrokerIP1=192.168.2.74
-    command: sh mqbroker
+#      NAMESRV_ADDR: "192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
+      NAMESRV_ADDR: "192.168.2.74:9876"
+    command: sh mqbroker -c /home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     depends_on:
       - namesrv-1
 #      - namesrv-2
@@ -142,8 +134,8 @@ services:
 #    volumes:
 #      - ./data/broker-a/slave/store:/home/rocketmq/store
 #    environment:
-#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
-#      JAVA_OPT_EXT: >-
+#      NAMESRV_ADDR: "192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
+#      JAVA_OPT_EXT: >- ## 需要参照 broker-a-master 配置, 迁移到 broker.conf 文件中
 #        -DbrokerClusterName=RocketCluster
 #        -DbrokerName=broker-a
 #        -DbrokerId=1
@@ -171,8 +163,8 @@ services:
 #    volumes:
 #      - ./data/broker-b/master/store:/home/rocketmq/store
 #    environment:
-#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
-#      JAVA_OPT_EXT: >-
+#      NAMESRV_ADDR: "192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
+#      JAVA_OPT_EXT: >-  ## 需要参照 broker-a-master 配置, 迁移到 broker.conf 文件中
 #        -DbrokerClusterName=RocketCluster
 #        -DbrokerName=broker-b
 #        -DbrokerId=0
@@ -199,8 +191,8 @@ services:
 #    volumes:
 #      - ./data/broker-b/slave/store:/home/rocketmq/store
 #    environment:
-#      NAMESRV_ADDR: "namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
-#      JAVA_OPT_EXT: >-
+#      NAMESRV_ADDR: "192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
+#      JAVA_OPT_EXT: >-   ## 需要参照 broker-a-master 配置, 迁移到 broker.conf 文件中
 #        -DbrokerClusterName=RocketCluster
 #        -DbrokerName=broker-b
 #        -DbrokerId=1
@@ -225,7 +217,8 @@ services:
     ports:
       - "9090:8080"
     environment:
-      JAVA_OPTS: "-Drocketmq.namesrv.addr=namesrv-1:9876;namesrv-2:9876;namesrv-3:9876"
+#      JAVA_OPTS: "-Drocketmq.namesrv.addr=192.168.2.74:9876;192.168.2.74:9877;192.168.2.74:9878"
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=192.168.2.74:9876"
     depends_on:
       - namesrv-1
 #      - namesrv-2
