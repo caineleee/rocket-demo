@@ -115,8 +115,8 @@ services:
       - ./data/broker-a/master/store:/home/rocketmq/store
       - ./data/broker-a/master/conf/broker.conf:/home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     environment:
-#      NAMESRV_ADDR: "192.168.5.22:9876;192.168.5.22:9877;192.168.5.22:9878"
-      NAMESRV_ADDR: "192.168.5.22:9876"
+#      NAMESRV_ADDR: "namesrv-1:9876"
+      NAMESRV_ADDR: "namesrv-1:9876"
     command: sh mqbroker -c /home/rocketmq/rocketmq-5.4.0/conf/broker.conf
     depends_on:
       - namesrv-1
