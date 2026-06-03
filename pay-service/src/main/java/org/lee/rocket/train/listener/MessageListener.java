@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
-import org.lee.rocket.train.common.constant.RocketMQConstants;
+import org.lee.rocket.train.common.mq.topic.RocketMQConstants;
 import org.springframework.stereotype.Component;
 
 @Slf4j

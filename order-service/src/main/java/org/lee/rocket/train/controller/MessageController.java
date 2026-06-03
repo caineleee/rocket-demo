@@ -3,7 +3,7 @@ package org.lee.rocket.train.controller;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.lee.rocket.train.common.constant.RocketMQConstants;
+import org.lee.rocket.train.common.mq.topic.RocketMQConstants;
 import org.lee.rocket.train.common.model.Result;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.bind.annotation.*;

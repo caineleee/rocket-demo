@@ -1,4 +1,4 @@
-package org.lee.rocket.train.common.constant;
+package org.lee.rocket.train.common.mq.topic;
 
 /**
  * RocketMQ 常量定义

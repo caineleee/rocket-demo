@@ -1,7 +1,7 @@
 package org.lee.rocket.train.service.impl;
 
 import org.apache.dubbo.config.annotation.DubboService;
-import org.lee.rocket.train.common.service.IUserService;
+import org.lee.rocket.train.common.dubbo.order.IUserService;
 
 /**
  * @ClassName UserService

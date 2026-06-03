@@ -1,4 +1,4 @@
-package org.lee.rocket.train.common.service;
+package org.lee.rocket.train.common.dubbo.order;
 
 /**
  * @ClassName IUserService

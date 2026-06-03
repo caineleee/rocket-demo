@@ -3,7 +3,7 @@ package org.lee.rocket.train;
 import jakarta.annotation.Resource;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.junit.jupiter.api.Test;
-import org.lee.rocket.train.common.constant.RocketMQConstants;
+import org.lee.rocket.train.common.mq.topic.RocketMQConstants;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
