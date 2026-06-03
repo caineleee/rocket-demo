@@ -229,19 +229,19 @@ services:
 
 
   # ==================== Zookeeper (Dubbo 传统注册中心) ====================
-  zookeeper:
-    image: zookeeper:3.8.4
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
-    volumes:
-      - ./data/zookeeper/data:/data
-      - ./data/zookeeper/datalog:/datalog
-    environment:
-      ZOO_MY_ID: 1
-    restart: unless-stopped
-    networks:
-      - rocket-demo-net
+#  zookeeper:
+#    image: zookeeper:3.8.4
+#    container_name: zookeeper
+#    ports:
+#      - "2181:2181"
+#    volumes:
+#      - ./data/zookeeper/data:/data
+#      - ./data/zookeeper/datalog:/datalog
+#    environment:
+#      ZOO_MY_ID: 1
+#    restart: unless-stopped
+#    networks:
+#      - rocket-demo-net
 
   # ==================== Nacos (新一代注册/配置中心) ====================
   nacos:
@@ -264,6 +264,28 @@ services:
       - mysql                       # 生产环境通常依赖MySQL持久化，这里先挂载数据卷即可
     networks:
       - rocket-demo-net
+
+
+#  dubbo-admin:
+#    image: apache/dubbo-admin:0.6.0
+#    container_name: dubbo-admin
+#    ports:
+#      - "38080:8080"
+#    environment:
+#      # ✅ 必须使用 DUBBO_ADMIN_ 前缀，Spring Boot 才能正确映射到 dubbo.admin.* 属性
+#      - DUBBO_ADMIN_REGISTRY_ADDRESS=nacos://192.168.5.22:8848
+#      - DUBBO_ADMIN_CONFIG_CENTER_ADDRESS=nacos://192.168.5.22:8848
+#      - DUBBO_ADMIN_METADATA_REPORT_ADDRESS=nacos://192.168.5.22:8848
+#
+#      # ✅ Nacos 鉴权（防止 server status check failed）
+#      - DUBBO_ADMIN_NACOS_USERNAME=nacos
+#      - DUBBO_ADMIN_NACOS_PASSWORD=nacos
+#
+#      # ✅ 【核心】关闭启动时的强制连通性检查，避免 Nacos 健康检查接口返回非预期状态导致启动中断
+#      - DUBBO_CONFIG_CENTER_CHECK=false
+#      - DUBBO_REGISTRY_CHECK=false
+#    restart: unless-stopped
+
 
 # ==================== 自定义网络 ====================
 networks:
