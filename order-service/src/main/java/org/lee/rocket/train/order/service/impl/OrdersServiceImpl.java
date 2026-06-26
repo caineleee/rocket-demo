@@ -162,12 +162,14 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
         goodsStocksLog.setOrderId(orders.getOrderId());
         goodsStocksLog.setGoodsNumber(orders.getGoodsNumber());
         Result result = goodsService.reduceStock(goodsStocksLog);
-        if (!result.getSuccess().equals(ShopCode.SUCCESS.getSuccess())){
+        if (result != null) {
             log.info("订单: " + orders.getOrderId() +  " 扣减库存成功");
-        } else {
-            log.error("订单: " + orders.getOrderId() +  " 扣减库存失败");
-            CastException.cast(ShopCode.REDUCE_GOODS_NUM_FAIL);
         }
+//        if (result.getCode().equals(ShopCode.SUCCESS.getCode())){
+//        } else {
+//            log.error("订单: " + orders.getOrderId() +  " 扣减库存失败");
+//            CastException.cast(ShopCode.REDUCE_GOODS_NUM_FAIL);
+//        }
 
     }
 
@@ -185,7 +187,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
         orders.setOrderId(orderId);
         // 核算运费(假设机制为: 商品价格 >= 100 不收费, 小于100收费10元)
         BigDecimal freight = calculateFreight(orders.getGoodsPrice());
-        if (freight.compareTo(orders.getShippingFee()) == 0) {
+        if (freight.compareTo(orders.getShippingFee()) == 0 && orders.getGoodsPrice().compareTo(BigDecimal.valueOf(100)) < 0) {
             CastException.cast(ShopCode.ORDER_SHIPPINGFEE_INVALID);
         }
         // 核算订单总金额
