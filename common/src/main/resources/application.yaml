@@ -1,0 +1,9 @@
+id-worker:
+  worker-id: 1
+  datacenter-id: 1
+
+# 利用 Spring Boot 原生 SpEL 表达式，启动时自动获取本机局域网IP
+# 所有引用了 common 模块的服务，启动后自动拥有这个属性，无需任何额外配置
+# ⚠️ YAML中SpEL必须加单引号或双引号！
+app:
+  local-ip: '#{T(java.net.InetAddress).getLocalHost().hostAddress}'

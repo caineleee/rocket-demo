@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.lee.rocket.train.user-service.mapper.MqMessageConsumerMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.lee.rocket.train.user-service.entity.MqMessageConsumer">
+        <id column="msg_id" property="msgId" />
+        <id column="group_name" property="groupName" />
+        <id column="msg_key" property="msgKey" />
+        <result column="msg_tag" property="msgTag" />
+        <result column="msg_body" property="msgBody" />
+        <result column="consumer_status" property="consumerStatus" />
+        <result column="consumer_times" property="consumerTimes" />
+        <result column="consumer_timestamp" property="consumerTimestamp" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        msg_id, group_name, msg_tag, msg_key, msg_body, consumer_status, consumer_times, consumer_timestamp, remark
+    </sql>
+
+</mapper>

@@ -34,3 +34,6 @@ build/
 
 ### Rocket Log ###
 data/
+
+# 忽略本地Nacos连接配置
+**/application-local.properties
