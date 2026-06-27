@@ -37,3 +37,6 @@ data/
 
 # 忽略本地Nacos连接配置
 **/application-local.properties
+
+# 忽略环境变量文件（包含敏感信息，从 .env.example 复制）
+.env
