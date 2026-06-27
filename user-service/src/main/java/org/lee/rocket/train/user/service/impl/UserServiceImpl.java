@@ -56,7 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 || userMoneyLog.getUserId() == null
                 || userMoneyLog.getOrderId() == null
                 || userMoneyLog.getUseMoney() == null
-                || userMoneyLog.getUseMoney().compareTo(BigDecimal.ZERO) <= 0) {
+                || userMoneyLog.getUseMoney() <= 0L) {
             CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
         }
         // 查询订单(余额日志使用情况), 判定需要走扣减还是回退逻辑

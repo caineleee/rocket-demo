@@ -1,14 +1,12 @@
 package org.lee.rocket.train.service.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -49,7 +47,7 @@ public class UserMoneyLog implements Serializable {
      * 操作金额（单位：元）
      */
     @TableField("use_money")
-    private BigDecimal useMoney;
+    private Long useMoney;
 
     /**
      * 日志时间（精确到毫秒）

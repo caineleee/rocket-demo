@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 /**
  * <p>
@@ -42,7 +41,7 @@ public class OrderPayment implements Serializable {
      * 支付金额
      */
     @TableField("pay_amount")
-    private BigDecimal payAmount;
+    private Long payAmount;
 
     /**
      * 是否已支付：0否 1是

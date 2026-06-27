@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -49,7 +48,7 @@ public class Goods implements Serializable {
      * 商品价格
      */
     @TableField("goods_price")
-    private BigDecimal goodsPrice;
+    private Long goodsPrice;
 
     /**
      * 商品描述

@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -38,7 +37,7 @@ public class Coupon implements Serializable {
      * 优惠券金额
      */
     @TableField("coupon_price")
-    private BigDecimal couponPrice;
+    private Long couponPrice;
 
     /**
      * 用户ID

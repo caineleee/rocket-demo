@@ -2,7 +2,7 @@ package org.lee.rocket.train.serviceapi;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.lee.rocket.train.common.model.Result;
-import org.lee.rocket.train.service.entity.Orders;
+import org.lee.rocket.train.service.entity.Order;
 
 /**
  * <p>
@@ -12,13 +12,13 @@ import org.lee.rocket.train.service.entity.Orders;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-public interface IOrdersService extends IService<Orders> {
+public interface IOrdersService extends IService<Order> {
 
     /**
      * 确认订单
      *
-     * @param orders 订单信息
+     * @param order 订单信息
      * @return 订单信息
      */
-    Result confirmOrder(Orders orders);
+    Result confirmOrder(Order order);
 }

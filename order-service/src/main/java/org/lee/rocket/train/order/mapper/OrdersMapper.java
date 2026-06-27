@@ -2,7 +2,7 @@ package org.lee.rocket.train.order.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.lee.rocket.train.service.entity.Orders;
+import org.lee.rocket.train.service.entity.Order;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import org.lee.rocket.train.service.entity.Orders;
  * @since 2026-06-03
  */
 @Mapper
-public interface OrdersMapper extends BaseMapper<Orders> {
+public interface OrdersMapper extends BaseMapper<Order> {
 }
