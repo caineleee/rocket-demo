@@ -1,7 +1,7 @@
 package org.lee.rocket.train.payment.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.lee.rocket.train.service.entity.OrderPayment;
+import org.lee.rocket.train.service.entity.Payment;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import org.lee.rocket.train.service.entity.OrderPayment;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-public interface OrderPaymentMapper extends BaseMapper<OrderPayment> {
+public interface OrderPaymentMapper extends BaseMapper<Payment> {
 
 }

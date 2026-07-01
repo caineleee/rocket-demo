@@ -1,7 +1,7 @@
 package org.lee.rocket.train.api;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.lee.rocket.train.service.entity.OrderPayment;
+import org.lee.rocket.train.service.entity.Payment;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import org.lee.rocket.train.service.entity.OrderPayment;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-public interface IOrderPaymentService extends IService<OrderPayment> {
+public interface IPaymentService extends IService<Payment> {
 
 }
