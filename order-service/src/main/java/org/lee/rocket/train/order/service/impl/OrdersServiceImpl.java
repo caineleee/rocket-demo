@@ -7,7 +7,6 @@ import jakarta.annotation.Resource;
 import lombok.extern.log4j.Log4j2;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.http.nio.protocol.HttpAsyncService;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.Message;
@@ -25,11 +24,11 @@ import org.lee.rocket.train.service.entity.MQEntity;
 import org.lee.rocket.train.service.entity.Order;
 import org.lee.rocket.train.service.entity.User;
 import org.lee.rocket.train.service.entity.UserMoneyLog;
-import org.lee.rocket.train.serviceapi.ICouponService;
-import org.lee.rocket.train.serviceapi.IGoodsService;
-import org.lee.rocket.train.serviceapi.IOrdersService;
+import org.lee.rocket.train.api.ICouponService;
+import org.lee.rocket.train.api.IGoodsService;
+import org.lee.rocket.train.api.IOrdersService;
 import org.lee.rocket.train.service.entity.Goods;
-import org.lee.rocket.train.serviceapi.IUserService;
+import org.lee.rocket.train.api.IUserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -87,6 +86,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Order> implemen
             reduceCoupun(order);
             // 扣减余额
             reduceMoneyPaid(order);
+
+            CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
+
             // 确认订单
             updateOrderStatus(order);
             // 返回成功状态

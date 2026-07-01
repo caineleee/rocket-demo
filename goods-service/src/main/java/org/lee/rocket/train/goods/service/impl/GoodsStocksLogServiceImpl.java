@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.lee.rocket.train.goods.mapper.GoodsStocksLogMapper;
 import org.lee.rocket.train.service.entity.GoodsStocksLog;
-import org.lee.rocket.train.serviceapi.IGoodsStocksLogService;
+import org.lee.rocket.train.api.IGoodsStocksLogService;
 import org.springframework.stereotype.Service;
 
 /**

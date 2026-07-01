@@ -52,7 +52,7 @@ public class Coupon implements Serializable {
     private Long orderId;
 
     /**
-     * 是否使用 0未使用 1已使用
+     * 是否使用 0(false)未使用 1(true)已使用
      */
     @TableField("is_used")
     private Boolean isUsed;

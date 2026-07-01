@@ -4,7 +4,7 @@ import org.lee.rocket.train.payment.mapper.OrderPaymentMapper;
 import org.lee.rocket.train.service.entity.OrderPayment;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.lee.rocket.train.serviceapi.IOrderPaymentService;
+import org.lee.rocket.train.api.IOrderPaymentService;
 import org.springframework.stereotype.Service;
 
 /**

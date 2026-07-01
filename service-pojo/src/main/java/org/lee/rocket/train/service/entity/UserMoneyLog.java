@@ -2,10 +2,12 @@ package org.lee.rocket.train.service.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -17,12 +19,14 @@ import java.time.LocalDateTime;
  * @author CodeGenerator
  * @since 2026-06-05
  */
-@Getter
-@Setter
-@ToString
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("tb_user_money_log")
 public class UserMoneyLog implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

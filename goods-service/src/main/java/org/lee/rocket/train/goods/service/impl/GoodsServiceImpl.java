@@ -7,10 +7,10 @@ import org.lee.rocket.train.common.constant.ShopCode;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.service.entity.GoodsStocksLog;
-import org.lee.rocket.train.serviceapi.IGoodsService;
+import org.lee.rocket.train.api.IGoodsService;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.goods.mapper.GoodsMapper;
-import org.lee.rocket.train.serviceapi.IGoodsStocksLogService;
+import org.lee.rocket.train.api.IGoodsStocksLogService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

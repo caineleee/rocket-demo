@@ -97,6 +97,8 @@ public enum ShopCode {
     MQ_MESSAGE_BODY_IS_EMPTY(false, 60002, "消息体不能为空"),
     //消息发送失败
     MQ_SEND_MESSAGE_FAIL(false, 60003, "消息发送失败"),
+    //消息并发乐观锁抢夺失败
+    MQ_MESSAGE_CONCURRENT_UPDATE_FAIL(false, 60004, "消息并发乐观锁抢夺失败"),
     //支付订单未找到
     //支付订单已支付
     PAYMENT_IS_PAID(false, 70002, "支付订单已支付");

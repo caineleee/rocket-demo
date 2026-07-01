@@ -5,7 +5,7 @@ import org.lee.rocket.train.common.constant.ShopCode;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.coupon.mapper.CouponMapper;
-import org.lee.rocket.train.serviceapi.ICouponService;
+import org.lee.rocket.train.api.ICouponService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.lee.rocket.train.service.entity.Coupon;
 import org.springframework.stereotype.Service;

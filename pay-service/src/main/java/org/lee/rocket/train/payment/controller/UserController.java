@@ -1,7 +1,7 @@
 package org.lee.rocket.train.payment.controller;
 
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.lee.rocket.train.serviceapi.IUserService;
+import org.lee.rocket.train.api.IUserService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

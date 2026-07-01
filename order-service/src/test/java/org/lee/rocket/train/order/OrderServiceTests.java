@@ -3,7 +3,7 @@ package org.lee.rocket.train.order;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.lee.rocket.train.service.entity.Order;
-import org.lee.rocket.train.serviceapi.IOrdersService;
+import org.lee.rocket.train.api.IOrdersService;
 import org.springframework.boot.test.context.SpringBootTest;
 
 

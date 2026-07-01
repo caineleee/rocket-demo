@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("org.lee.rocket.train.goods.mapper")
+@MapperScan({"org.lee.rocket.train.goods.mapper", "org.lee.rocket.train.service.mapper"})
 @EnableDubbo
 public class GoodsServiceApplication {
 
