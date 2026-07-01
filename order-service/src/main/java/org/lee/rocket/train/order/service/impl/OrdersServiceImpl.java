@@ -86,9 +86,6 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Order> implemen
             reduceCoupun(order);
             // 扣减余额
             reduceMoneyPaid(order);
-
-            CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
-
             // 确认订单
             updateOrderStatus(order);
             // 返回成功状态
