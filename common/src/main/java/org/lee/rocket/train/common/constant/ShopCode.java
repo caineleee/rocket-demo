@@ -91,17 +91,22 @@ public enum ShopCode {
     MONEY_PAID_LESS_ZERO(false, 50001, "余额不能小于0"),
     //余额非法
     MONEY_PAID_INVALID(false, 50002, "余额非法"),
+    // mq tag 不能为空
+    MQ_TAG_IS_EMPTY(false, 60000, "Tag不能为空"),
     //Topic不能为空
     MQ_TOPIC_IS_EMPTY(false, 60001, "Topic不能为空"),
     //消息体不能为空
-    MQ_MESSAGE_BODY_IS_EMPTY(false, 60002, "消息体不能为空"),
+    MQ_MESSAGE_BODY_IS_EMPTY(false, 60002, "MQ消息体不能为空"),
     //消息发送失败
     MQ_SEND_MESSAGE_FAIL(false, 60003, "消息发送失败"),
     //消息并发乐观锁抢夺失败
     MQ_MESSAGE_CONCURRENT_UPDATE_FAIL(false, 60004, "消息并发乐观锁抢夺失败"),
     //支付订单未找到
+    PAYMENT_NOT_FOUND(false, 70001, "支付订单未找到"),
     //支付订单已支付
-    PAYMENT_IS_PAID(false, 70002, "支付订单已支付");
+    PAYMENT_IS_PAID(false, 70002, "支付订单已支付"),
+    //支付订单失败
+    PAYMENT_FAILURE(false, 70003, "支付订单失败");
 
     @Getter
     @Setter

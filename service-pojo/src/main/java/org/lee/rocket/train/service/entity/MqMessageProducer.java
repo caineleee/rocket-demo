@@ -3,9 +3,13 @@ package org.lee.rocket.train.service.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -18,9 +22,10 @@ import java.time.LocalDateTime;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-@Getter
-@Setter
-@ToString
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(chain = true)
 @TableName("tb_mq_message_producer")
 public class MqMessageProducer implements Serializable {
 
@@ -63,10 +68,10 @@ public class MqMessageProducer implements Serializable {
     private String msgBody;
 
     /**
-     * 消息状态：0未处理 1已处理
+     * 消息状态：0未处理 1已处理 2处理失败
      */
     @TableField("msg_status")
-    private Boolean msgStatus;
+    private Integer msgStatus;
 
     /**
      * 记录时间

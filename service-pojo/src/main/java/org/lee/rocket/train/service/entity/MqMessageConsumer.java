@@ -1,12 +1,12 @@
 package org.lee.rocket.train.service.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -24,18 +24,19 @@ import java.time.LocalDateTime;
 @TableName("tb_mq_message_consumer")
 public class MqMessageConsumer implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * 消息ID（关联生产表，必须非空）
      */
-    @TableId("msg_id")
+    @TableField("msg_id")
     private String msgId;
 
     /**
      * 消费者组名
      */
-    @TableId("group_name")
+    @TableField("group_name")
     private String groupName;
 
     /**
@@ -47,7 +48,7 @@ public class MqMessageConsumer implements Serializable {
     /**
      * Key
      */
-    @TableId("msg_key")
+    @TableField("msg_key")
     private String msgKey;
 
     /**

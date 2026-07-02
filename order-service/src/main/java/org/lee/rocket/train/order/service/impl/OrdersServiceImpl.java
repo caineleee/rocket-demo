@@ -15,7 +15,7 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.lee.rocket.train.common.constant.ShopCode;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
-import org.lee.rocket.train.order.mapper.OrdersMapper;
+import org.lee.rocket.train.order.mapper.OrderMapper;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.lee.rocket.train.service.entity.Coupon;
@@ -43,7 +43,7 @@ import java.time.LocalDateTime;
  */
 @Log4j2
 @DubboService(interfaceClass = IOrdersService.class)
-public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Order> implements IOrdersService {
+public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrdersService {
 
     @DubboReference(version = "1.0.0", group = "default")
     private IGoodsService goodsService;

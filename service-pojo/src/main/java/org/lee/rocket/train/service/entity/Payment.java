@@ -47,5 +47,5 @@ public class Payment implements Serializable {
      * 是否已支付：0否 1是
      */
     @TableField("is_paid")
-    private Boolean isPaid;
+    private Integer isPaid;
 }

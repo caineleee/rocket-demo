@@ -34,13 +34,13 @@ public class CodeGenerator {
      * 例如: "user,order,product"
      * 留空或填 "*" 表示所有表
      */
-    private static final String TABLE_NAMES = "tb_mq_consumer_log";
+    private static final String TABLE_NAMES = "tb_mq_message_consumer";
     
     /**
      * 模块名称（影响包路径）
      * 例如: order-service, user-service
      */
-    private static final String MODULE_NAME = "order-service";
+    private static final String MODULE_NAME = "service";
     
     /**
      * 父包名

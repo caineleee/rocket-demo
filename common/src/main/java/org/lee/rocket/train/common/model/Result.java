@@ -64,4 +64,8 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> error(String message) {
         return new Result<>("500", false, message, null);
     }
+
+    public static <T> Result<T> error() {
+        return new Result<>(ShopCode.FAIL);
+    }
 }

@@ -26,7 +26,7 @@ import java.io.UnsupportedEncodingException;
 @Component
 @RocketMQMessageListener(
         topic = "${mq.topics.order-failure}",
-        consumerGroup = "${rocketmq.consumer.order-failure.group}",
+        consumerGroup = "${mq.order-failure.consumer.group}",
         messageModel = MessageModel.BROADCASTING) // 广播模式
 public class OrderFailure implements RocketMQListener<MessageExt> {
 
