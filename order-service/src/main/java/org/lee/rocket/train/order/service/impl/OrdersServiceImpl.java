@@ -30,7 +30,6 @@ import org.lee.rocket.train.api.IOrdersService;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.api.IUserService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
@@ -43,7 +42,6 @@ import java.time.LocalDateTime;
  * @since 2026-06-03
  */
 @Log4j2
-@Service
 @DubboService(interfaceClass = IOrdersService.class)
 public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Order> implements IOrdersService {
 

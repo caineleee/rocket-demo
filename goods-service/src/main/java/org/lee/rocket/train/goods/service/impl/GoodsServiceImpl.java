@@ -11,7 +11,6 @@ import org.lee.rocket.train.api.IGoodsService;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.goods.mapper.GoodsMapper;
 import org.lee.rocket.train.api.IGoodsStocksLogService;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-@Service
 @DubboService(interfaceClass = IGoodsService.class)
 public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements IGoodsService {
 

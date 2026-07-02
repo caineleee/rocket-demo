@@ -8,7 +8,6 @@ import org.lee.rocket.train.coupon.mapper.CouponMapper;
 import org.lee.rocket.train.api.ICouponService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.lee.rocket.train.service.entity.Coupon;
-import org.springframework.stereotype.Service;
 
 /**
  * <p>
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-@Service
 @DubboService(interfaceClass = ICouponService.class)
 public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> implements ICouponService {
     /**

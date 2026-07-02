@@ -7,7 +7,6 @@ import org.lee.rocket.train.common.constant.ShopCode;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.service.entity.UserMoneyLog;
-//import org.lee.rocket.train.serviceapi.IUserMoneyLogService;
 import org.lee.rocket.train.api.IUserService;
 import org.lee.rocket.train.service.entity.User;
 import org.lee.rocket.train.user.mapper.UserMapper;

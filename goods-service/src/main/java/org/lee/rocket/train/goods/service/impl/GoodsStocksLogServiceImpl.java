@@ -5,7 +5,6 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.lee.rocket.train.goods.mapper.GoodsStocksLogMapper;
 import org.lee.rocket.train.service.entity.GoodsStocksLog;
 import org.lee.rocket.train.api.IGoodsStocksLogService;
-import org.springframework.stereotype.Service;
 
 /**
  * <p>
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
  * @author CodeGenerator
  * @since 2026-06-22
  */
-@Service // 暴露服务(本地 bean)
 @DubboService(interfaceClass = IGoodsStocksLogService.class)  // 同时暴露远程服务
 public class GoodsStocksLogServiceImpl extends ServiceImpl<GoodsStocksLogMapper, GoodsStocksLog> implements IGoodsStocksLogService {
 
