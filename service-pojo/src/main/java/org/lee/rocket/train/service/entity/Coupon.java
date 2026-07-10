@@ -3,9 +3,8 @@ package org.lee.rocket.train.service.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -18,9 +17,8 @@ import java.time.LocalDateTime;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-@Getter
-@Setter
-@ToString
+@Data
+@Accessors(chain = true)
 @TableName("tb_coupon")
 public class Coupon implements Serializable {
 
