@@ -81,6 +81,20 @@ public enum ShopCode {
     USER_MONEY_REDUCE_FAIL(false, 30003, "余额扣减失败"),
     //已经退款
     USER_MONEY_REFUND_ALREADY(true, 30004, "订单已经退过款"),
+    //用户名或密码错误
+    USER_LOGIN_FAIL(false, 30005, "用户名或密码错误"),
+    //Token无效
+    TOKEN_INVALID(false, 30006, "Token无效"),
+    //Token已过期
+    TOKEN_EXPIRED(false, 30007, "Token已过期"),
+    //未携带Token
+    TOKEN_NOT_FOUND(false, 30008, "未携带Token"),
+    //Token已失效
+    TOKEN_INVALIDATED(false, 30009, "Token已失效，请重新登录"),
+    //权限不足
+    PERMISSION_DENIED(false, 30010, "权限不足"),
+    //Refresh Token无效
+    REFRESH_TOKEN_INVALID(false, 30011, "Refresh Token无效"),
     //优惠券不不存在
     COUPON_NO_EXIST(false, 40001, "优惠券不存在"),
     //优惠券不合法

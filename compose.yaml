@@ -289,6 +289,18 @@ services:
 #      - DUBBO_REGISTRY_CHECK=false
 #    restart: unless-stopped
 
+  # ==================== Redis ====================
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    restart: unless-stopped
+    networks:
+      - rocket-demo-net
+
 
 # ==================== 自定义网络 ====================
 networks:
