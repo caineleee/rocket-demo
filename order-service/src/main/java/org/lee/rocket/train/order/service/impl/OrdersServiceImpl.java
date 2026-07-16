@@ -72,11 +72,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
      * @return
      */
     @Override
-    public Result confirmOrder(Order order) {
+    public Result<?> confirmOrder(Order order) {
         // 校验订单
         checkOrder(order);
         // 生成预订单(用户不可见)
-        Long preOrderId = savePreOrder(order);
+        // Long preOrderId = savePreOrder(order);
+        savePreOrder(order);
         try {
             // 扣减库存
             reduceStock(order);
@@ -106,14 +107,14 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
                         order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
                         order.getGoodsId(), order.getGoodsNumber());
                 log.error(ex);
-                return new Result(ShopCode.MQ_MESSAGE_STATUS_FAIL);
+                return new Result<>(ShopCode.MQ_MESSAGE_STATUS_FAIL);
             }
             // 订单回退消息发送成功
             log.error("订单确认失败,mq 回退--- 订单: {} 优惠券: {} 用户: {} 用户余额: {} 商品: {} 商品数量: {}",
                     order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
                     order.getGoodsId(), order.getGoodsNumber());
             // 返回失败状态
-            return new Result(ShopCode.ORDER_CONFIRM_FAIL);
+            return new Result<>(ShopCode.ORDER_CONFIRM_FAIL);
         }
     }
 
@@ -188,7 +189,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             coupon.setIsUsed(ShopCode.COUPON_ISUSED.getSuccess());
             coupon.setUsedTime(LocalDateTime.now());
 
-            Result result = couponService.reduceCoupon(coupon);
+            Result<?> result = couponService.reduceCoupon(coupon);
             if (!result.getSuccess()) {
                 log.error("订单: " + order.getOrderId() +  " 扣减优惠券: " + coupon.getCouponId() +" 失败");
                 CastException.cast(ShopCode.COUPON_USE_FAIL);
@@ -208,7 +209,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         goodsStocksLog.setGoodsId(order.getGoodsId());
         goodsStocksLog.setOrderId(order.getOrderId());
         goodsStocksLog.setGoodsNumber(order.getGoodsNumber());
-        Result result = goodsService.reduceStock(goodsStocksLog);
+        Result<?> result = goodsService.reduceStock(goodsStocksLog);
         if (result != null) {
             log.info("订单: " + order.getOrderId() +  " 扣减库存成功");
         }

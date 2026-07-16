@@ -27,7 +27,7 @@ public interface IUserService extends IService<User> {
      *
      * @param userMoneyLog 用户余额变动日志
      */
-    Result updateMoneyPaid(UserMoneyLog userMoneyLog);
+    Result<?> updateMoneyPaid(UserMoneyLog userMoneyLog);
 
     /**
      * 测试

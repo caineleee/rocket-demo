@@ -19,5 +19,5 @@ public interface ICouponService extends IService<Coupon> {
      *
      * @param coupon 优惠券信息
      */
-    Result reduceCoupon(Coupon coupon);
+    Result<?> reduceCoupon(Coupon coupon);
 }

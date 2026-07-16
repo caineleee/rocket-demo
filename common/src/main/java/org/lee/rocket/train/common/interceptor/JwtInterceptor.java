@@ -9,6 +9,7 @@ import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.common.service.TokenService;
 import org.lee.rocket.train.common.util.JwtUtil;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -28,7 +29,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private ObjectMapper objectMapper;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         // 非 Controller 请求（如静态资源、Swagger 文档等）直接放行
         if (!(handler instanceof HandlerMethod)) {
             return true;

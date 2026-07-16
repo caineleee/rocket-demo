@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.lee.rocket.train.service.entity.UserMoneyLog;
 
-import static org.apache.commons.collections.CollectionUtils.select;
-
 /**
  * <p>
  * 用户余额变动日志表 Mapper 接口

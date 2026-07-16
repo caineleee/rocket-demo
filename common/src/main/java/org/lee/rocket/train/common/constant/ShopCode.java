@@ -1,6 +1,5 @@
 package org.lee.rocket.train.common.constant;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

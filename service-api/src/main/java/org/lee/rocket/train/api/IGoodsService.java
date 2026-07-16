@@ -27,5 +27,5 @@ public interface IGoodsService extends IService<Goods> {
      *
      * @param goodsStocksLog 扣减库存日志
      */
-    Result reduceStock(GoodsStocksLog goodsStocksLog);
+    Result<?> reduceStock(GoodsStocksLog goodsStocksLog);
 }

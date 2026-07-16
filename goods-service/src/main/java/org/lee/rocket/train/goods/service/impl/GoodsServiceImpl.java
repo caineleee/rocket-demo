@@ -49,7 +49,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
      * @return Result
      */
     @Override
-    public Result reduceStock(GoodsStocksLog goodsStocksLog) {
+    public Result<?> reduceStock(GoodsStocksLog goodsStocksLog) {
         // 参数校验
         if (goodsStocksLog.getGoodsId() == null
                 || goodsStocksLog.getOrderId() == null
@@ -63,11 +63,12 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         }
 
         // 校验库存是否充足
-        if (goods.getGoodsNumber() < goodsStocksLog.getGoodsNumber()) {
+        if (goods== null || goods.getGoodsNumber() < goodsStocksLog.getGoodsNumber()) {
             CastException.cast(ShopCode.GOODS_NUM_NOT_ENOUGH);
         }
         // 减去库存
         goods.setGoodsNumber(goods.getGoodsNumber() - goodsStocksLog.getGoodsNumber());
+
         boolean updateSuccess = updateById(goods);
         if (!updateSuccess) {
             CastException.cast(ShopCode.REDUCE_GOODS_NUM_FAIL);
@@ -81,6 +82,6 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             CastException.cast(ShopCode.REDUCE_GOODS_NUM_EMPTY);
         }
 
-        return new Result(ShopCode.SUCCESS);
+        return new Result<>(ShopCode.SUCCESS);
     }
 }

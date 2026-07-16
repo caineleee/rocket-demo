@@ -48,7 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @param userMoneyLog 用户余额日志
      */
     @Override
-    public Result updateMoneyPaid(UserMoneyLog userMoneyLog) {
+    public Result<?> updateMoneyPaid(UserMoneyLog userMoneyLog) {
         // 校验参数是否合法
         if (userMoneyLog == null
                 || userMoneyLog.getUserId() == null

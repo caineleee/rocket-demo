@@ -1,5 +1,6 @@
 package org.lee.rocket.train.common.exception;
 
+import lombok.Getter;
 import org.lee.rocket.train.common.constant.ShopCode;
 
 /**
@@ -11,7 +12,11 @@ import org.lee.rocket.train.common.constant.ShopCode;
  */
 public class CustomerException extends RuntimeException{
 
-    private ShopCode shopCode;
+    @Getter
+    private final ShopCode shopCode;
 
-    public CustomerException(ShopCode shopCode) { this.shopCode = shopCode; }
+    public CustomerException(ShopCode shopCode) {
+        super(shopCode != null ? shopCode.getMessage() : "未知错误");
+        this.shopCode = shopCode;
+    }
 }

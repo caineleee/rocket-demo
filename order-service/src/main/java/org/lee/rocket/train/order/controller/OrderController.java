@@ -25,7 +25,7 @@ public class OrderController {
     private IOrdersService orderService;
 
     @PutMapping("/confirm")
-    public Result confirmOrder(@RequestBody Order order) {
+    public Result<?> confirmOrder(@RequestBody Order order) {
         return orderService.confirmOrder(order);
     }
 

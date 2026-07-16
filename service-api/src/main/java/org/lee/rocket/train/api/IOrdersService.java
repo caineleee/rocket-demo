@@ -20,5 +20,5 @@ public interface IOrdersService extends IService<Order> {
      * @param order 订单信息
      * @return 订单信息
      */
-    Result confirmOrder(Order order);
+    Result<?> confirmOrder(Order order);
 }

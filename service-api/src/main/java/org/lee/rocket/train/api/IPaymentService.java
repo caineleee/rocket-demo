@@ -18,12 +18,12 @@ public interface IPaymentService extends IService<Payment> {
      * 创建支付订单
      * @param payment 支付订单
      */
-    Result createPayment(Payment payment);
+    Result<?> createPayment(Payment payment);
 
     /**
      * 支付回调
      * @param payment 支付订单
      * @return 支付回调结果
      */
-    Result callbackPayment(Payment payment);
+    Result<?> callbackPayment(Payment payment);
 }
