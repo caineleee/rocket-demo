@@ -50,6 +50,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
     @Resource
     private IGoodsStocksLogService goodsStocksLogService;
 
+    @SuppressWarnings("null")
     @Override
     public void onMessage(MessageExt messageExt) {
         // 解析消息内容

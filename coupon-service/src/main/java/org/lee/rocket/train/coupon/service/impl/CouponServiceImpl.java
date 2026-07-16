@@ -25,7 +25,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
      * @return 扣减结果
      */
     @Override
-    public Result reduceCoupon(Coupon coupon) {
+    public Result<?> reduceCoupon(Coupon coupon) {
         if (coupon == null || coupon.getCouponId() == null) {
             CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
         }

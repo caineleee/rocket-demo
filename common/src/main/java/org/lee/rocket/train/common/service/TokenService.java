@@ -25,6 +25,7 @@ public class TokenService {
      * @param userId      用户 ID
      * @param accessToken Access Token
      */
+    @SuppressWarnings("null")
     public void saveAccessToken(Long userId, String accessToken) {
         // Key: token:{accessToken}, Value: userId, Expire: 2小时
         String key = JwtConstants.REDIS_TOKEN_PREFIX + accessToken;
@@ -43,6 +44,7 @@ public class TokenService {
      * @param userId       用户 ID
      * @param refreshToken Refresh Token
      */
+    @SuppressWarnings("null")
     public void saveRefreshToken(Long userId, String refreshToken) {
         // Key: refresh:{refreshToken}, Value: userId, Expire: 3天
         String key = JwtConstants.REDIS_REFRESH_PREFIX + refreshToken;

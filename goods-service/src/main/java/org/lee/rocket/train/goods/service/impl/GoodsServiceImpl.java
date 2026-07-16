@@ -48,6 +48,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
      * @param goodsStocksLog 扣减库存日志
      * @return Result
      */
+    @SuppressWarnings("null")
     @Override
     public Result<?> reduceStock(GoodsStocksLog goodsStocksLog) {
         // 参数校验

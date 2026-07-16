@@ -226,6 +226,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
      * @param order 订单信息
      * @return 订单ID
      */
+    @SuppressWarnings("null")
     private Long savePreOrder(Order order) {
         // 设置订单状态:0未确认 (用户不可见)
         order.setOrderStatus(ShopCode.ORDER_NO_CONFIRM.getCode());
@@ -312,6 +313,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
      * 校验订单信息
      * @param order 订单信息
      */
+    @SuppressWarnings("null")
     private void checkOrder(Order order) {
         //1.校验订单是否存在
         if (order == null) {

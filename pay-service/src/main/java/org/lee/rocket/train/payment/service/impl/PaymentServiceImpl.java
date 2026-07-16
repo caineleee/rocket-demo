@@ -62,11 +62,12 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
      * @param payment 支付订单
      */
     @Override
-    public Result createPayment(Payment payment) {
+    public Result<?> createPayment(Payment payment) {
         if (payment == null || payment.getOrderId() == null) {
             CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
         }
         // 判断订单支付状态
+        @SuppressWarnings("null")
         Long count = lambdaQuery()
                 .eq(Payment::getOrderId, payment.getOrderId())
                 .eq(Payment::getIsPaid, ShopCode.PAYMENT_IS_PAID.getCode())
@@ -89,8 +90,9 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
      *
      * @param payment 支付订单
      */
+    @SuppressWarnings("null")
     @Override
-    public Result callbackPayment(Payment payment) {
+    public Result<?> callbackPayment(Payment payment) {
         // 判断用户支付状态
         if (!payment.getIsPaid().equals(ShopCode.ORDER_PAY_STATUS_IS_PAY.getCode())) {
             CastException.cast(ShopCode.ORDER_PAY_STATUS_NO_PAY);

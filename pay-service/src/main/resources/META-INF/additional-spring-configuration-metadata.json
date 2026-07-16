@@ -1,0 +1,42 @@
+{"properties": [
+  {
+    "name": "dubbo.provider.register-mode",
+    "type": "java.lang.String",
+    "description": "A description for 'dubbo.provider.register-mode'"
+  },
+  {
+    "name": "rocketmq.consumer.order-failure.group",
+    "type": "java.lang.String",
+    "description": "A description for 'rocketmq.consumer.order-failure.group'"
+  },
+  {
+    "name": "mq.topics.order-failure",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.topics.order-failure'"
+  },
+  {
+    "name": "rocketmq.topics.pay",
+    "type": "java.lang.String",
+    "description": "A description for 'rocketmq.topics.pay'"
+  },
+  {
+    "name": "rocketmq.tags.pay",
+    "type": "java.lang.String",
+    "description": "A description for 'rocketmq.tags.pay'"
+  },
+  {
+    "name": "nacos.logging.default.config.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'nacos.logging.default.config.enabled'"
+  },
+  {
+    "name": "id-worker.worker-id",
+    "type": "java.lang.String",
+    "description": "A description for 'id-worker.worker-id'"
+  },
+  {
+    "name": "id-worker.datacenter-id",
+    "type": "java.lang.String",
+    "description": "A description for 'id-worker.datacenter-id'"
+  }
+]}

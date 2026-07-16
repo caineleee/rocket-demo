@@ -30,7 +30,7 @@ public class PaymentController {
      * @return 结果
      */
     @PutMapping("/create")
-    public Result createPayment(@RequestBody Payment payment) {
+    public Result<?> createPayment(@RequestBody Payment payment) {
         return paymentService.createPayment(payment);
     }
 
@@ -40,7 +40,7 @@ public class PaymentController {
      * @return 结果
      */
     @PutMapping("callback")
-    public Result callbackPayment(@RequestBody Payment payment) {
+    public Result<?> callbackPayment(@RequestBody Payment payment) {
         return paymentService.callbackPayment(payment);
     }
 }

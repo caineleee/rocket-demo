@@ -47,6 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      *
      * @param userMoneyLog 用户余额日志
      */
+    @SuppressWarnings("null")
     @Override
     public Result<?> updateMoneyPaid(UserMoneyLog userMoneyLog) {
         // 校验参数是否合法
@@ -62,6 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //                .eq(UserMoneyLog::getUserId, userMoneyLog.getUserId())
 //                .eq(UserMoneyLog::getOrderId, userMoneyLog.getOrderId()).count();
         Long count = userMoneyLogMapper.countByCompositeKey(userMoneyLog);
+        @SuppressWarnings("null")
         User user = query().eq("user_id", userMoneyLog.getUserId()).one();
 
         if (user == null) {
