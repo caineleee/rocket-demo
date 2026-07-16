@@ -35,6 +35,9 @@ build/
 ### Trae ###
 .trae/
 
+### Qoder ###
+.qoder/
+
 ### Eclipse ###
 .metadata
 .recommenders/
