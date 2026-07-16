@@ -32,6 +32,38 @@ build/
 ### VS Code ###
 .vscode/
 
+### Trae ###
+.trae/
+
+### Eclipse ###
+.metadata
+.recommenders/
+
+### Gradle ###
+.gradle/
+
+### Emacs ###
+*~
+\#*\#
+.\#*
+
+### Vim ###
+*.swp
+*.swo
+*.swn
+*.swm
+.tags
+
+### Sublime Text ###
+.sublime-project
+.sublime-workspace
+
+### Atom ###
+.atom/
+
+### TextMate ###
+.tm_properties
+
 ### Rocket Log ###
 data/
 
