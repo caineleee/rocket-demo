@@ -119,7 +119,19 @@ public enum ShopCode {
     //支付订单已支付
     PAYMENT_IS_PAID(false, 70002, "支付订单已支付"),
     //支付订单失败
-    PAYMENT_FAILURE(false, 70003, "支付订单失败");
+    PAYMENT_FAILURE(false, 70003, "支付订单失败"),
+    // Redis AOP：分布式锁获取失败
+    REDIS_LOCK_ACQUIRE_FAIL(false, 80001, "分布式锁获取失败，请稍后重试"),
+    // Redis AOP：计数器超过上限
+    REDIS_INCR_EXCEED_MAX(false, 80002, "操作频率超限，请稍后重试"),
+    // Redis AOP：计数器低于下限
+    REDIS_INCR_BELOW_MIN(false, 80003, "库存不足，无法扣减"),
+    // Redis AOP：RedisGet 未命中且策略为 FAIL_FAST
+    REDIS_GET_MISS_FAST_FAIL(false, 80004, "缓存未命中，请求被拒绝"),
+    // Redis AOP：SpEL 表达式包含危险调用
+    REDIS_SPEL_SECURITY_VIOLATION(false, 80005, "SpEL 表达式包含不安全调用"),
+    // Redis AOP：Redis 操作异常
+    REDIS_OPERATION_ERROR(false, 80006, "Redis 操作异常");
 
     @Getter
     @Setter
