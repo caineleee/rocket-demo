@@ -3,7 +3,6 @@ package org.lee.rocket.train.goods.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.lee.rocket.train.common.annotation.RedisGet;
 import org.lee.rocket.train.common.annotation.RedisIncr;
 import org.lee.rocket.train.common.annotation.FailStrategy;
 import org.lee.rocket.train.common.constant.ShopCode;

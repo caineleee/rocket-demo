@@ -95,13 +95,19 @@ public class AppStartupListener implements ServletContextListener {
         
         try {
             // ===== 1. 读取 JSON 文件 =====
-            // getResourceAsStream() 从 classpath 读取资源文件
+            // 使用 ClassLoader 从 classpath 读取资源文件，兼容 jar 包运行模式
             // classpath 包括：src/main/resources 目录下的文件
             ServletContext context = sce.getServletContext();
-            InputStream inputStream = context.getResourceAsStream("/data/dict.json");
+            InputStream inputStream = AppStartupListener.class.getClassLoader()
+                .getResourceAsStream("data/dict.json");
             
             if (inputStream == null) {
-                throw new RuntimeException("找不到字典数据文件：/data/dict.json");
+                // 降级方案：尝试从 ServletContext 读取（兼容 war 包部署）
+                inputStream = context.getResourceAsStream("/data/dict.json");
+            }
+            
+            if (inputStream == null) {
+                throw new RuntimeException("找不到字典数据文件：data/dict.json");
             }
             
             // ===== 2. 读取文件内容 =====

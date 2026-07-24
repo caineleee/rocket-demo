@@ -1,7 +1,7 @@
 package org.lee.rocket.train.common.service;
 
-import jakarta.annotation.Resource;
 import org.lee.rocket.train.common.constant.JwtConstants;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +11,19 @@ import java.util.concurrent.TimeUnit;
 /**
  * Token 管理服务
  * 基于 Redis 实现 Token 的存储、续期、黑名单管理和登出功能
+ *
+ * 【为什么用 @Autowired 而不是 @Resource？】
+ * Spring Boot 的 RedisAutoConfiguration 会注册两个 Redis 模板 Bean：
+ *   - redisTemplate      → 类型为 RedisTemplate<Object, Object>
+ *   - stringRedisTemplate → 类型为 StringRedisTemplate
+ * @Resource 默认按字段名注入，字段名 "redisTemplate" 会匹配到 RedisTemplate 类型的 Bean，
+ * 导致 BeanNotOfRequiredTypeException（类型不匹配）。
+ * @Autowired 按类型注入，能精确匹配到 StringRedisTemplate 类型的 Bean。
  */
 @Service
 public class TokenService {
 
-    @Resource
+    @Autowired
     private StringRedisTemplate redisTemplate;
 
     /**

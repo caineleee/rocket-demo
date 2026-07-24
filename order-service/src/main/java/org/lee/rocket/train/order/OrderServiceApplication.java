@@ -5,9 +5,14 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.lee.rocket.train.common.config.IdWorkerConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {
+    "org.lee.rocket.train.order",
+    "org.lee.rocket.train.common"
+})
 @MapperScan("org.lee.rocket.train.order.mapper")
 @EnableDubbo
 @Import(IdWorkerConfig.class)  // 导入 common 模块的 IdWorker 配置
