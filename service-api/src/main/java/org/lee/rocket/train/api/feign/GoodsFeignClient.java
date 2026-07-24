@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.PathVariable;
  * - @FeignClient(name = "goods-service")：
  *   - name：目标服务名称（必须与 goods-service 的 spring.application.name 一致）
  *   - OpenFeign 会从 Nacos 注册中心查找该服务的实例列表
- *   - 自动实现负载均衡（默认轮询策略）
+ *   - 负载均衡策略：在 OrderServiceApplication 启动类上通过 @LoadBalancerClient 配置
+ *     示例：@LoadBalancerClient(name = "goods-service", configuration = GoodsServiceLoadBalancerConfig.class)
+ *     当前使用随机策略（Random），对比 Dubbo 的 @DubboReference(loadbalance = "random")
  * <p>
  * 【使用场景】
  * 1. 调用外部第三方 HTTP 服务（如支付网关、短信服务）
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * 1. 目标服务必须注册到 Nacos（配置 spring.cloud.nacos.discovery）
  * 2. 调用方服务必须启用 @EnableFeignClients（在启动类上添加）
  * 3. 接口方法上的 @GetMapping/@PostMapping 必须与目标 Controller 一致
+ * 4. 负载均衡配置在调用方启动类上，不在 Feign Client 接口上（因为 service-api 不能依赖 order-service）
  */
 @FeignClient(name = "goods-service")
 public interface GoodsFeignClient {

@@ -88,16 +88,6 @@
         <!-- ======================================== -->
         <!-- OpenFeign 依赖（HTTP 服务调用） -->
         <!-- ======================================== -->
-        <!-- 
-            【OpenFeign 示例】
-            OpenFeign 用于通过 HTTP 调用其他服务的 REST API。
-            
-            【与 Dubbo 的区别】
-            - Dubbo：RPC 调用（高性能、二进制协议）
-              示例：OrdersServiceImpl 中的 @DubboReference private IGoodsService goodsService
-            - OpenFeign：HTTP 调用（通用性强、跨语言）
-              示例：OrdersServiceImpl 中的 @Resource private GoodsFeignClient goodsFeignClient
-        -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -107,6 +97,19 @@
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <!-- ======================================== -->
+        <!-- Spring Cloud LoadBalancer（客户端负载均衡） -->
+        <!-- ======================================== -->
+        <!-- LoadBalancer 的作用
+            1. 从 Nacos 注册中心获取服务实例列表
+            2. 根据负载均衡策略选择一个实例
+            3. 将请求路由到选中的实例
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
     </dependencies>
 
