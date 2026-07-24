@@ -84,6 +84,30 @@
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
         </dependency>
+
+        <!-- ======================================== -->
+        <!-- OpenFeign 依赖（HTTP 服务调用） -->
+        <!-- ======================================== -->
+        <!-- 
+            【OpenFeign 示例】
+            OpenFeign 用于通过 HTTP 调用其他服务的 REST API。
+            
+            【与 Dubbo 的区别】
+            - Dubbo：RPC 调用（高性能、二进制协议）
+              示例：OrdersServiceImpl 中的 @DubboReference private IGoodsService goodsService
+            - OpenFeign：HTTP 调用（通用性强、跨语言）
+              示例：OrdersServiceImpl 中的 @Resource private GoodsFeignClient goodsFeignClient
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <!-- Nacos Discovery（服务注册与发现，OpenFeign 需要配合使用） -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
     </dependencies>
 
 	<build>

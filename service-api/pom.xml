@@ -32,6 +32,27 @@
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
+        <!-- ======================================== -->
+        <!-- OpenFeign 依赖（HTTP 服务调用） -->
+        <!-- ======================================== -->
+        <!-- 
+            【OpenFeign 示例】
+            OpenFeign 是 Spring Cloud 提供的 HTTP 客户端，用于简化服务间调用。
+            
+            【与 Dubbo 的区别】
+            - Dubbo：RPC 调用（高性能、二进制协议、强类型）
+            - OpenFeign：HTTP 调用（通用性强、跨语言、基于 REST）
+            
+            【使用场景】
+            - 调用外部第三方 HTTP 服务
+            - 跨语言服务调用
+            - 需要更灵活的 HTTP 请求控制
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "spring.cloud.nacos.discovery.server-addr",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.nacos.discovery.server-addr'"
+  },
+  {
+    "name": "spring.cloud.nacos.discovery.namespace",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.nacos.discovery.namespace'"
+  },
+  {
+    "name": "nacos.logging.default.config.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'nacos.logging.default.config.enabled'"
+  }
+]}

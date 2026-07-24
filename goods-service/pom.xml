@@ -83,6 +83,20 @@
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
         </dependency>
+
+        <!-- ======================================== -->
+        <!-- Nacos Discovery（服务注册与发现） -->
+        <!-- ======================================== -->
+        <!-- 
+            【OpenFeign 示例】
+            OpenFeign 需要配合 Nacos Discovery 使用，实现服务发现和负载均衡。
+            - goods-service 注册到 Nacos，其他服务才能通过服务名调用它
+            - 与 Dubbo 使用的 Nacos 注册中心是同一个，只是协议不同
+        -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
