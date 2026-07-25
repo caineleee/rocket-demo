@@ -2,8 +2,8 @@ package org.lee.rocket.train.order.controller;
 
 import jakarta.annotation.Resource;
 import org.lee.rocket.train.api.IOrdersService;
-import org.lee.rocket.train.api.feign.GoodsFeignClient;
 import org.lee.rocket.train.common.model.Result;
+import org.lee.rocket.train.feign.GoodsFeignClient;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.service.entity.Order;
 import org.springframework.web.bind.annotation.*;

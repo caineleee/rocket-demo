@@ -1,6 +1,7 @@
-package org.lee.rocket.train.api.feign;
+package org.lee.rocket.train.feign;
 
 import org.lee.rocket.train.common.model.Result;
+import org.lee.rocket.train.config.FeignFullLogLevel;
 import org.lee.rocket.train.service.entity.Goods;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +39,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * 3. 接口方法上的 @GetMapping/@PostMapping 必须与目标 Controller 一致
  * 4. 负载均衡配置在调用方启动类上，不在 Feign Client 接口上（因为 service-api 不能依赖 order-service）
  */
-@FeignClient(name = "goods-service")
+@FeignClient(name = "goods-service", configuration = FeignFullLogLevel.class)
 public interface GoodsFeignClient {
 
     /**
