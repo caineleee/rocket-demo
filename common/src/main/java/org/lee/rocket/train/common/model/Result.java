@@ -65,6 +65,10 @@ public class Result<T> implements Serializable {
         return new Result<>("500", false, message, null);
     }
 
+    public static <T> Result<T> error(Integer code, String message) {
+        return new Result<>(code.toString(), false, message, null);
+    }
+
     public static <T> Result<T> error() {
         return new Result<>(ShopCode.FAIL);
     }

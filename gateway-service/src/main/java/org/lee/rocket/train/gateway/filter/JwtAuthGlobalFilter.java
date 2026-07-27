@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.lee.rocket.train.common.constant.JwtConstants;
 import org.lee.rocket.train.common.util.JwtUtil;
-import org.lee.rocket.train.common.result.Result;
+import org.lee.rocket.train.common.model.Result;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -51,8 +51,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
     
     /**
      * AntPath 路径匹配器
-     * 支持 AntPath 模式匹配，如 /goods/**、/coupon/*/detail 等
-     */
+     * 支持 AntPath 模式匹配，如 /goods/**、/coupon/*/
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
@@ -95,7 +94,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
 
         // ===== 3. 验证 Token 签名和过期时间 =====
-        String userId;
+        Long userId;
         String userName;
         try {
             userId = JwtUtil.getUserIdFromToken(token);
@@ -119,7 +118,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
                     // ===== 5. 验证通过，将用户信息放入请求头 =====
                     // 下游服务可以通过请求头获取用户信息，不需要再次解析 JWT
                     ServerHttpRequest mutatedRequest = request.mutate()
-                            .header("X-User-Id", userId)
+                            .header("X-User-Id", String.valueOf(userId))
                             .header("X-User-Name", userName != null ? userName : "")
                             .header("X-Token", token)
                             .build();
@@ -138,10 +137,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
 
     /**
      * 检查路径是否在白名单中
-     * 使用 AntPathMatcher 支持 AntPath 模式匹配（如 /goods/**、/user/*/detail 等）
-     *
-     * @param path 请求路径
-     * @return true 表示在白名单中，false 表示不在
+     * 使用 AntPathMatcher 支持 AntPath 模式匹配（如 /goods/**、/user/*）
      */
     private boolean isWhiteListed(String path) {
         return WHITE_LIST.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));

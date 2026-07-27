@@ -56,6 +56,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class XssGlobalFilter implements GlobalFilter, Ordered {
 
+    @SuppressWarnings("null")
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -67,35 +68,39 @@ public class XssGlobalFilter implements GlobalFilter, Ordered {
 
         // ===== 2. 创建新的请求，替换参数 =====
         // 遍历所有参数，对值进行 HTML 转义
-        ServerHttpRequest mutatedRequest = request.mutate()
-                .uri(uri -> {
-                    // 获取原始查询字符串
-                    String query = uri.getQuery();
-                    if (query == null || query.isEmpty()) {
-                        return uri;
-                    }
+        java.net.URI originalUri = request.getURI();
+        String query = originalUri.getQuery();
 
-                    // 解析并转义参数
-                    StringBuilder escapedQuery = new StringBuilder();
-                    String[] pairs = query.split("&");
-                    for (String pair : pairs) {
-                        String[] keyValue = pair.split("=", 2);
-                        String key = keyValue[0];
-                        String value = keyValue.length > 1 ? keyValue[1] : "";
+        ServerHttpRequest mutatedRequest;
+        if (query != null && !query.isEmpty()) {
+            // 解析并转义参数
+            StringBuilder escapedQuery = new StringBuilder();
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=", 2);
+                String key = keyValue[0];
+                String value = keyValue.length > 1 ? keyValue[1] : "";
 
-                        // 对值进行 HTML 转义
-                        String escapedValue = HtmlUtils.htmlEscape(value);
+                // 对值进行 HTML 转义
+                String escapedValue = HtmlUtils.htmlEscape(value);
 
-                        if (escapedQuery.length() > 0) {
-                            escapedQuery.append("&");
-                        }
-                        escapedQuery.append(key).append("=").append(escapedValue);
-                    }
+                if (escapedQuery.length() > 0) {
+                    escapedQuery.append("&");
+                }
+                escapedQuery.append(key).append("=").append(escapedValue);
+            }
 
-                    // 构建新的 URI
-                    return uri.resolve("?" + escapedQuery.toString());
-                })
-                .build();
+            // 构建新的 URI：scheme://host:port/path?escapedQuery
+            String baseUri = originalUri.getScheme() + "://" + originalUri.getHost()
+                    + (originalUri.getPort() > 0 ? ":" + originalUri.getPort() : "")
+                    + originalUri.getPath();
+            java.net.URI escapedUri = java.net.URI.create(baseUri + "?" + escapedQuery);
+
+            mutatedRequest = request.mutate().uri(escapedUri).build();
+        } else {
+            // 没有查询参数，无需转义
+            mutatedRequest = request;
+        }
 
         System.out.println("[XssGlobalFilter] 请求参数已转义");
 
