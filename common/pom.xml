@@ -82,6 +82,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- TTL：TransmittableThreadLocal，支持线程池场景下的上下文自动传递 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>transmittable-thread-local</artifactId>
+            <version>2.14.3</version>
+        </dependency>
+
         <!-- OpenFeign：用于 Feign 拦截器传递用户上下文 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
