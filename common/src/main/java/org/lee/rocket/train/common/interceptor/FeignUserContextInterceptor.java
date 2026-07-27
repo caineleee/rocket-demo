@@ -1,4 +1,4 @@
-package org.lee.rocket.train.interceptor;
+package org.lee.rocket.train.common.interceptor;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
