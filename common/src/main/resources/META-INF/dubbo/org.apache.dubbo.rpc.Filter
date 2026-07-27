@@ -1,0 +1,2 @@
+dubboUserContextConsumerFilter=org.lee.rocket.train.common.filter.DubboUserContextConsumerFilter
+dubboUserContextProviderFilter=org.lee.rocket.train.common.filter.DubboUserContextProviderFilter

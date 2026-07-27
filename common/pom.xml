@@ -82,5 +82,19 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- OpenFeign：用于 Feign 拦截器传递用户上下文 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Dubbo：用于 Dubbo Filter 传递用户上下文 -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
 	</dependencies>
 </project>
