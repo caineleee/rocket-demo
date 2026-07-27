@@ -11,6 +11,7 @@ import org.lee.rocket.train.common.exception.CustomerException;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -210,7 +211,7 @@ public class RedisOperationService {
      *
      * @param key Redis Key
      */
-    public void delete(String key) {
+    public void delete(@NonNull String key) {
         long start = System.currentTimeMillis();
         try {
             redisTemplate.delete(key);

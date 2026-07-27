@@ -3,6 +3,7 @@ package org.lee.rocket.train.user.controller;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.lee.rocket.train.common.constant.JwtConstants;
+import org.lee.rocket.train.common.context.UserContext;
 import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.common.service.TokenService;
 import org.lee.rocket.train.common.util.JwtUtil;
@@ -19,7 +20,7 @@ import java.util.Map;
  * 提供用户登录、登出、Token 刷新、获取用户信息等接口
  */
 @RestController
-@RequestMapping("/user-service/user")
+@RequestMapping("/user")
 public class UserController {
 
     @Resource
@@ -159,15 +160,17 @@ public class UserController {
 
     /**
      * 获取当前用户信息接口
-     * 从 Request 属性中获取用户 ID（由 JwtInterceptor 注入），查询并返回用户信息
+     * 从 UserContext 中获取用户 ID（由 UserInfoInterceptor 从请求头读取并存入）
      *
-     * @param request HTTP 请求对象（用于获取用户 ID）
      * @return 用户信息（不包含密码）
      */
     @GetMapping("/info")
-    public Result<User> getUserInfo(HttpServletRequest request) {
-        // 从 Request 属性中获取用户 ID（由 JwtInterceptor 在验证 Token 后注入）
-        Long userId = (Long) request.getAttribute(JwtConstants.USER_ID_KEY);
+    public Result<User> getUserInfo() {
+        // 从 UserContext 获取用户 ID（由 UserInfoInterceptor 从 Gateway 传递的请求头中读取）
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            return Result.error("用户未登录");
+        }
         User user = userService.getById(userId);
         // 安全处理：不返回密码字段
         if (user != null) {

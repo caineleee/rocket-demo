@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    # ========================================
+    # Nacos Discovery 配置（服务注册与发现）
+    # ========================================
+    # Gateway 需要注册到 Nacos，才能通过服务名（lb://service-name）转发请求
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: public
+      # 禁用 Nacos Config（不从 Nacos 读取配置）
+      config:
+        enabled: false
+    # ========================================
+    # Gateway 路由配置
+    # ========================================
+    # 路由规则：将请求路径转发到对应的微服务
+    # 格式：/service-name/** → lb://service-name
+    # 示例：/order/create → lb://order-service
+    gateway:
+      routes:
+        # 订单服务路由
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/order/**
+
+        # 商品服务路由
+        - id: goods-service
+          uri: lb://goods-service
+          predicates:
+            - Path=/goods/**
+
+        # 用户服务路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+
+        # 支付服务路由
+        - id: pay-service
+          uri: lb://pay-service
+          predicates:
+            - Path=/pay/**
+
+        # 优惠券服务路由
+        - id: coupon-service
+          uri: lb://coupon-service
+          predicates:
+            - Path=/coupon/**
+
+      # ========================================
+      # 默认过滤器配置
+      # ========================================
+      default-filters:
+        # 降级错误处理（当服务不可用时返回友好提示）
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+  # ========================================
+  # Redis 配置（用于 JWT Token 验证）
+  # ========================================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+# ========================================
+# 服务端口配置
+# ========================================
+server:
+  port: 8080
+
+# ========================================
+# 日志配置
+# ========================================
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.lee.rocket.train.gateway: DEBUG

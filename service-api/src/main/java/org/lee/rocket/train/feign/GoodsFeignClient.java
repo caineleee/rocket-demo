@@ -63,6 +63,6 @@ public interface GoodsFeignClient {
      * @param goodsId 商品 ID
      * @return 商品信息（包含商品名称、价格、库存等）
      */
-    @GetMapping("/goods-service/goods/{id}")
+    @GetMapping("/goods/{id}")
     Result<Goods> findById(@PathVariable("id") Long goodsId);
 }

@@ -26,6 +26,7 @@
         <module>service-pojo</module>
         <module>service-api</module>
         <module>mybatis-generator</module>
+        <module>gateway-service</module>
 	</modules>
 
 	<properties>

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2026-06-03
  */
 @RestController
-@RequestMapping("/goods-service/goods")
+@RequestMapping("/goods")
 public class GoodsController {
 
     @Resource
