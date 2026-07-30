@@ -105,14 +105,21 @@ public class EncodingFilter implements Filter {
         httpRequest.setCharacterEncoding("UTF-8");
 
         // ===== 2. 设置响应编码 =====
-        // 【方式一】只设置编码
-        // httpResponse.setCharacterEncoding("UTF-8");
-        
-        // 【方式二】同时设置 Content-Type 和编码（推荐）
-        // Content-Type: text/html;charset=UTF-8
-        // 告诉浏览器：响应体是 HTML 格式，使用 UTF-8 编码
-        // 这样浏览器会用 UTF-8 解码响应体，正确显示中文
-        httpResponse.setContentType("text/html;charset=UTF-8");
+        // 只设置字符编码，不强制设置 Content-Type。
+        //
+        // 【为什么不能 setContentType("text/html;charset=UTF-8")？】
+        // REST API 服务的响应体是 JSON，不是 HTML。
+        // 如果在 Filter 中强制设置 Content-Type 为 text/html，Spring MVC 的
+        // RequestResponseBodyMethodProcessor 在写入 @ResponseBody 返回值时，
+        // 会发现 Content-Type 已经是 text/html，而 Jackson 的
+        // MappingJackson2HttpMessageConverter 只处理 application/json，
+        // 导致 HttpMessageNotWritableException: No converter for [class Result]
+        // with preset Content-Type 'text/html;charset=UTF-8'，接口直接 500。
+        //
+        // 正确做法：只调用 setCharacterEncoding("UTF-8") 设置编码，
+        // 让 Spring 的内容协商机制根据 Accept 请求头 / produces 属性
+        // 自动选择 application/json;charset=UTF-8 作为响应 Content-Type。
+        httpResponse.setCharacterEncoding("UTF-8");
 
         // ===== 3. 放行请求 =====
         // 【关键】必须调用 chain.doFilter()，否则请求会被拦截，后续的 Filter 和 Servlet 都不会执行
