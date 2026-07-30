@@ -301,6 +301,29 @@ services:
     networks:
       - rocket-demo-net
 
+  # ==================== Sentinel Dashboard（限流/熔断控制台） ====================
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.8
+    container_name: sentinel-dashboard
+    ports:
+      - "8858:8858"    # Dashboard 控制台
+      - "8719:8719"    # 客户端通信端口（可选）
+    environment:
+      - TZ=Asia/Shanghai
+      # ========================================
+      # Nacos 持久化配置（暂时注释，用于学习理解）
+      # ========================================
+      # 启用 Nacos 数据源持久化后，规则会保存到 Nacos，重启不丢失
+      # - SENTINEL_DATASOURCE_NACOS_SERVERADDR=nacos:8848
+      # - SENTINEL_DATASOURCE_NACOS_NAMESPACE=public
+      # - SENTINEL_DATASOURCE_NACOS_GROUP=SENTINEL_GROUP
+    volumes:
+      # 日志持久化（可选）
+      - sentinel-logs:/root/logs/csp
+    restart: unless-stopped
+    networks:
+      - rocket-demo-net
+
 
 # ==================== 自定义网络 ====================
 networks:
@@ -313,4 +336,6 @@ volumes:
   mysql-data:
   zookeeper-data: # 如果前面没有声明，建议在这里补上命名卷的声明
   nacos-data:
+  # Sentinel Dashboard 日志卷
+  sentinel-logs:
 

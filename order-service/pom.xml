@@ -85,6 +85,12 @@
             <artifactId>nacos-client</artifactId>
         </dependency>
 
+        <!-- Sentinel 限流熔断 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+
         <!-- ======================================== -->
         <!-- OpenFeign 依赖（HTTP 服务调用） -->
         <!-- ======================================== -->

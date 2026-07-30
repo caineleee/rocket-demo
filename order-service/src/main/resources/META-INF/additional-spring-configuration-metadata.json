@@ -13,5 +13,65 @@
     "name": "nacos.logging.default.config.enabled",
     "type": "java.lang.String",
     "description": "A description for 'nacos.logging.default.config.enabled'"
+  },
+  {
+    "name": "dubbo.security.serialize.check",
+    "type": "java.lang.String",
+    "description": "A description for 'dubbo.security.serialize.check'"
+  },
+  {
+    "name": "dubbo.provider.register-mode",
+    "type": "java.lang.String",
+    "description": "A description for 'dubbo.provider.register-mode'"
+  },
+  {
+    "name": "mq.order-failure.consumer.group",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.order-failure.consumer.group'"
+  },
+  {
+    "name": "mq.topics.order-failure",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.topics.order-failure'"
+  },
+  {
+    "name": "mq.tags.order-failure",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.tags.order-failure'"
+  },
+  {
+    "name": "mq.payment.consumer.group",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.payment.consumer.group'"
+  },
+  {
+    "name": "mq.topics.payment",
+    "type": "java.lang.String",
+    "description": "A description for 'mq.topics.payment'"
+  },
+  {
+    "name": "feign.client.config.default.connect-timeout",
+    "type": "java.lang.String",
+    "description": "A description for 'feign.client.config.default.connect-timeout'"
+  },
+  {
+    "name": "feign.client.config.default.read-timeout",
+    "type": "java.lang.String",
+    "description": "A description for 'feign.client.config.default.read-timeout'"
+  },
+  {
+    "name": "feign.client.config.default.logger-level",
+    "type": "java.lang.String",
+    "description": "A description for 'feign.client.config.default.logger-level'"
+  },
+  {
+    "name": "id-worker.worker-id",
+    "type": "java.lang.String",
+    "description": "A description for 'id-worker.worker-id'"
+  },
+  {
+    "name": "id-worker.datacenter-id",
+    "type": "java.lang.String",
+    "description": "A description for 'id-worker.datacenter-id'"
   }
 ]}
