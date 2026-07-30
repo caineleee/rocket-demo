@@ -20,19 +20,21 @@ import java.util.concurrent.TimeUnit;
  * - Refresh Token：UUID 格式，存 Redis，用于刷新 Access Token
  * - 黑名单：登出时将 Access Token 加入黑名单，TTL = Token 剩余有效期
  *
- * 【为什么用 @Autowired 而不是 @Resource？】
- * Spring Boot 的 RedisAutoConfiguration 会注册两个 Redis 模板 Bean：
- *   - redisTemplate      → 类型为 RedisTemplate<Object, Object>
- *   - stringRedisTemplate → 类型为 StringRedisTemplate
- * @Resource 默认按字段名注入，字段名 "redisTemplate" 会匹配到 RedisTemplate 类型的 Bean，
- * 导致 BeanNotOfRequiredTypeException（类型不匹配）。
- * @Autowired 按类型注入，能精确匹配到 StringRedisTemplate 类型的 Bean。
+ * 【依赖注入方式：构造器注入（@RequiredArgsConstructor + final 字段）】
+ * 使用 Lombok 的 @RequiredArgsConstructor 为所有 final 字段生成构造器，
+ * Spring 通过构造器按类型注入 StringRedisTemplate。
+ *
+ * 【为什么字段必须加 final？】
+ * @RequiredArgsConstructor 只为 final 字段（或 @NonNull 字段）生成构造器参数。
+ * 若字段缺少 final，则不会出现在构造器参数中，Spring 不会注入该依赖，
+ * 字段保持为 null，运行时调用 redisTemplate.opsForValue() 抛出 NullPointerException。
+ * 此前 redisTemplate 字段遗漏了 final 修饰符，导致登录接口 saveRefreshToken() 直接 NPE。
  */
 @Service
 @RequiredArgsConstructor
 public class TokenService {
 
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * 生成 Refresh Token（UUID 格式）
@@ -49,7 +51,6 @@ public class TokenService {
      * @param userId       用户 ID
      * @param refreshToken Refresh Token（UUID）
      */
-    @SuppressWarnings("null")
     public void saveRefreshToken(Long userId, String refreshToken) {
         // Key: refresh:{refreshToken}, Value: userId, Expire: 7天
         String key = JwtConstants.REDIS_REFRESH_PREFIX + refreshToken;
