@@ -12,8 +12,14 @@ public class JwtConstants {
     /**
      * JWT 签名密钥
      * 生产环境应从配置文件或密钥管理服务中获取，此处为演示使用硬编码
+     *
+     * 【长度要求】HMAC-SHA256 算法要求密钥长度 >= 32 字节（256 位），否则 jjwt 在
+     * Keys.hmacShaKeyFor() 阶段抛出 WeakKeyException，导致 JwtUtil 静态初始化失败
+     * （ExceptionInInitializerError），登录等所有 Token 生成接口直接 500。
+     * 此前 "rocket-demo-jwt-secret-key-2026" 仅 31 字节（248 位），差 1 字节触发该异常，
+     * 已补齐至 38 字节（304 位）。
      */
-    public static final String SECRET_KEY = "rocket-demo-jwt-secret-key-2026";
+    public static final String SECRET_KEY = "rocket-demo-jwt-secret-key-2026-secure";
 
     /**
      * Access Token 过期时间（毫秒）
