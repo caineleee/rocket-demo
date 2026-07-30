@@ -2,6 +2,7 @@ package org.lee.rocket.train.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
@@ -25,7 +26,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - Filter 要用 GlobalFilter，不能用 Servlet Filter
  * - 不能使用 @EnableDubbo（Gateway 不参与 Dubbo 调用）
  */
-@SpringBootApplication
+// 排除 DataSource 自动装配：Gateway 基于 WebFlux 仅依赖 Redis（响应式），不连接数据库；
+// 但 common 模块（编译期依赖）引入了 mybatis-plus-spring-boot3-starter，会传递性触发
+// DataSourceAutoConfiguration，因 Gateway 无任何数据源配置而以 "Failed to determine a suitable driver class" 启动失败
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableDiscoveryClient  // 启用服务发现（从 Nacos 获取服务列表）
 public class GatewayServiceApplication {
 
