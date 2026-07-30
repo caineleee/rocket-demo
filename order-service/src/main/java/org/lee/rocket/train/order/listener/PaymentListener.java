@@ -25,8 +25,13 @@ import java.io.UnsupportedEncodingException;
  */
 @Slf4j
 @Component
-@RocketMQMessageListener(topic = "${rocketmq.order.topic}",
-        consumerGroup = "${rocketmq.order.consumer.group}",messageModel = MessageModel.BROADCASTING)
+// 监听支付成功 MQ 消息，更新订单状态为已支付
+// topic/consumerGroup 引用 application.properties 中已定义的属性：
+//   mq.topics.payment=pay-topic        （与 pay-service 发送端 rocketmq.topics.pay 同值，保证收发一致）
+//   mq.payment.consumer.group=payment-consumer-group
+// 此前误用 ${rocketmq.order.topic}/${rocketmq.order.consumer.group}（未定义），导致占位符无法解析、消费者启动失败
+@RocketMQMessageListener(topic = "${mq.topics.payment}",
+        consumerGroup = "${mq.payment.consumer.group}", messageModel = MessageModel.BROADCASTING)
 public class PaymentListener implements RocketMQListener<MessageExt> {
 
     @Resource
