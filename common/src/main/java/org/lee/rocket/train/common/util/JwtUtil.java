@@ -136,4 +136,15 @@ public class JwtUtil {
             return true;
         }
     }
+
+    /**
+     * 从 Token 中获取过期时间
+     *
+     * @param token JWT Token 字符串
+     * @return 过期时间
+     */
+    public static Date getExpirationFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.getExpiration();
+    }
 }

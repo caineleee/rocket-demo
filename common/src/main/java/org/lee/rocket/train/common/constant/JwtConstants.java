@@ -17,15 +17,15 @@ public class JwtConstants {
 
     /**
      * Access Token 过期时间（毫秒）
-     * 默认 2 小时：7200 * 1000 = 7200000
+     * 默认 30 分钟：30 * 60 * 1000 = 1800000
      */
-    public static final long ACCESS_TOKEN_EXPIRE_TIME = 7200000L;
+    public static final long ACCESS_TOKEN_EXPIRE_TIME = 1800000L;
 
     /**
      * Refresh Token 过期时间（毫秒）
-     * 默认 3 天：3 * 24 * 60 * 60 * 1000 = 259200000
+     * 默认 7 天：7 * 24 * 60 * 60 * 1000 = 604800000
      */
-    public static final long REFRESH_TOKEN_EXPIRE_TIME = 259200000L;
+    public static final long REFRESH_TOKEN_EXPIRE_TIME = 604800000L;
 
     /**
      * Token 前缀（Authorization Header 中使用）
@@ -48,11 +48,6 @@ public class JwtConstants {
     public static final String USER_NAME_KEY = "userName";
 
     /**
-     * Redis 中 Access Token 的 key 前缀
-     */
-    public static final String REDIS_TOKEN_PREFIX = "token:";
-
-    /**
      * Redis 中 Refresh Token 的 key 前缀
      */
     public static final String REDIS_REFRESH_PREFIX = "refresh:";
@@ -61,9 +56,4 @@ public class JwtConstants {
      * Redis 中 Token 黑名单的 key 前缀
      */
     public static final String REDIS_BLACKLIST_PREFIX = "blacklist:";
-
-    /**
-     * Redis 中用户 Token 集合的 key 前缀（用于多端登录管理）
-     */
-    public static final String REDIS_USER_TOKENS_PREFIX = "user_tokens:";
 }

@@ -66,10 +66,10 @@ public class UserController {
 
         // 生成双 Token
         String accessToken = JwtUtil.generateAccessToken(user.getUserId(), user.getUserName());
-        String refreshToken = JwtUtil.generateRefreshToken(user.getUserId());
+        // Refresh Token 使用 UUID 格式（不透明 Token），不存 Redis
+        String refreshToken = tokenService.generateRefreshToken();
 
-        // 保存到 Redis
-        tokenService.saveAccessToken(user.getUserId(), accessToken);
+        // 只保存 Refresh Token 到 Redis（Access Token 不存 Redis，只验证签名 + 检查黑名单）
         tokenService.saveRefreshToken(user.getUserId(), refreshToken);
 
         // 构建响应
@@ -82,23 +82,21 @@ public class UserController {
 
     /**
      * 用户登出接口
-     * 将当前 Token 加入黑名单，使其立即失效
+     * 将当前 Access Token 加入黑名单，删除 Refresh Token
      *
      * @param request HTTP 请求对象（用于获取 Authorization Header 中的 Token）
      * @return 登出成功的响应结果
      */
     @PostMapping("/logout")
     public Result<Void> logout(HttpServletRequest request) {
-        // 从请求头中获取 Token
+        // 从请求头中获取 Access Token
         String authHeader = request.getHeader(JwtConstants.AUTH_HEADER);
+        String refreshToken = request.getHeader("X-Refresh-Token");
+        
         if (authHeader != null && authHeader.startsWith(JwtConstants.TOKEN_PREFIX)) {
-            String token = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
-            // 从 Token 中提取用户 ID
-            Long userId = JwtUtil.getUserIdFromToken(token);
-            if (userId != null) {
-                // 将 Token 加入黑名单并从 Redis 中删除
-                tokenService.logout(userId, token);
-            }
+            String accessToken = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
+            // 将 Access Token 加入黑名单，删除 Refresh Token
+            tokenService.logout(accessToken, refreshToken);
         }
         return Result.success();
     }
@@ -106,34 +104,24 @@ public class UserController {
     /**
      * 刷新 Token 接口
      * 使用 Refresh Token 获取新的双 Token（Access Token + Refresh Token）
-     * 用于 Access Token 过期后，用户无需重新输入密码即可获取新 Token
+     * 实现 Token 轮换：旧的 Refresh Token 失效，生成新的 Refresh Token
      *
      * @param refreshRequest 刷新请求体，包含 refreshToken
      * @return 包含新双 Token 的响应结果
      */
     @PostMapping("/refresh")
     public Result<Map<String, String>> refresh(@RequestBody Map<String, String> refreshRequest) {
-        String refreshToken = refreshRequest.get("refreshToken");
+        String oldRefreshToken = refreshRequest.get("refreshToken");
 
         // 参数校验
-        if (refreshToken == null || refreshToken.isEmpty()) {
+        if (oldRefreshToken == null || oldRefreshToken.isEmpty()) {
             return Result.error("Refresh Token不能为空");
         }
 
-        // 验证 Refresh Token 签名
-        if (!JwtUtil.validateToken(refreshToken)) {
-            return Result.error("Refresh Token无效");
-        }
-
-        // 检查 Refresh Token 是否过期
-        if (JwtUtil.isTokenExpired(refreshToken)) {
-            return Result.error("Refresh Token已过期，请重新登录");
-        }
-
-        // 从 Redis 中验证 Refresh Token 是否存在
-        Long userId = tokenService.getUserIdByRefreshToken(refreshToken);
+        // 从 Redis 中验证 Refresh Token 是否存在（UUID 格式，不需要验证签名）
+        Long userId = tokenService.getUserIdByRefreshToken(oldRefreshToken);
         if (userId == null) {
-            return Result.error("Refresh Token无效");
+            return Result.error("Refresh Token无效或已过期，请重新登录");
         }
 
         // 查询用户信息
@@ -142,12 +130,14 @@ public class UserController {
             return Result.error("用户不存在");
         }
 
+        // Token 轮换：删除旧的 Refresh Token
+        tokenService.deleteRefreshToken(oldRefreshToken);
+
         // 生成新的双 Token
         String newAccessToken = JwtUtil.generateAccessToken(userId, user.getUserName());
-        String newRefreshToken = JwtUtil.generateRefreshToken(userId);
+        String newRefreshToken = tokenService.generateRefreshToken();
 
-        // 更新 Redis 中的 Token
-        tokenService.saveAccessToken(userId, newAccessToken);
+        // 保存新的 Refresh Token 到 Redis
         tokenService.saveRefreshToken(userId, newRefreshToken);
 
         // 构建响应

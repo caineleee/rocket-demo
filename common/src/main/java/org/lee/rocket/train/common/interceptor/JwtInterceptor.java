@@ -63,24 +63,14 @@ public class JwtInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // 6. 检查 Token 是否在 Redis 中存在（防止伪造 Token）
-        if (!tokenService.isValidAccessToken(token)) {
-            writeErrorResponse(response, Result.error("Token已失效"));
-            return false;
-        }
-
-        // 7. 从 Token 中提取用户 ID
+        // 6. 从 Token 中提取用户 ID
         Long userId = JwtUtil.getUserIdFromToken(token);
         if (userId == null) {
             writeErrorResponse(response, Result.error("Token无效"));
             return false;
         }
 
-        // 8. 刷新 Token 过期时间（滑动过期）
-        // 用户每次请求时，将 Token 的过期时间重新设置为 2 小时
-        tokenService.refreshAccessToken(userId, token);
-
-        // 9. 将用户 ID 存入 Request 属性，供 Controller 使用
+        // 7. 将用户 ID 存入 Request 属性，供 Controller 使用
         request.setAttribute(JwtConstants.USER_ID_KEY, userId);
 
         return true;
