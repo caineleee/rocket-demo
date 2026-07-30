@@ -87,6 +87,17 @@
             <artifactId>nacos-client</artifactId>
         </dependency>
 
+        <!-- ======================================== -->
+        <!-- Nacos Discovery（服务注册与发现） -->
+        <!-- ======================================== -->
+        <!-- 注册 HTTP 端口（8084）到 Nacos，使 Gateway 能通过 lb://user-service 路由请求。
+             此前缺失该依赖，导致 user-service 仅注册了 Dubbo RPC 端口（20881），
+             Gateway 的 lb://user-service 路由到 RPC 端口，返回 "invalid version format: UNSUPPORTED"。 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
         <!-- Sentinel 限流熔断 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

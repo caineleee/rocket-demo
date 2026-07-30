@@ -78,6 +78,15 @@
             <artifactId>nacos-client</artifactId>
         </dependency>
 
+        <!-- ======================================== -->
+        <!-- Nacos Discovery（服务注册与发现） -->
+        <!-- ======================================== -->
+        <!-- 注册 HTTP 端口（8083）到 Nacos，使 Gateway 能通过 lb://pay-service 路由请求。 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
         <!-- Sentinel 限流熔断 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
