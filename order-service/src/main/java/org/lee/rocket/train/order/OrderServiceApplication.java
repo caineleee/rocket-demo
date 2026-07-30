@@ -25,8 +25,10 @@ import org.springframework.context.annotation.Import;
 @MapperScan("org.lee.rocket.train.order.mapper")
 // 启用 Dubbo RPC 调用
 @EnableDubbo
-// 启用 OpenFeign HTTP 调用
-@EnableFeignClients(basePackages = "org.lee.rocket.train.api.feign", defaultConfiguration = FeignBasicLogLevel.class)  // 启用 OpenFeign，扫描 Feign Client 接口
+// 启用 OpenFeign HTTP 调用，扫描 Feign Client 接口
+// Feign Client（GoodsFeignClient/CouponFeignClient）实际位于 org.lee.rocket.train.feign 包（service-api 模块），
+// 此前误写成 org.lee.rocket.train.api.feign（该包不存在），导致 Feign Client 无法被扫描装配
+@EnableFeignClients(basePackages = "org.lee.rocket.train.feign", defaultConfiguration = FeignBasicLogLevel.class)
 // 为被调服务配置自定义负载均衡策略（多个服务用 @LoadBalancerClients 包裹）
 @LoadBalancerClients({
     @LoadBalancerClient(name = "goods-service", configuration = GoodsServiceLoadBalancerConfig.class),   // goods-service：随机策略
