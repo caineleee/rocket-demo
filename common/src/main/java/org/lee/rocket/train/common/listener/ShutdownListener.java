@@ -3,6 +3,7 @@ package org.lee.rocket.train.common.listener;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 优雅停机清理监听器
@@ -59,12 +60,14 @@ import jakarta.servlet.ServletContextListener;
  * 演示如何清理数据库连接池和线程池。
  * 由于本项目使用 Spring 管理的资源（如 HikariCP、@Async），
  * 实际清理逻辑由 Spring 负责，这里只做演示。
+ *
  */
+@Slf4j
 public class ShutdownListener implements ServletContextListener {
 
     /**
      * 应用关闭时触发
-     * 
+     *
      * 【执行流程】
      * 1. 停止接收新请求（由 Spring Boot 负责）
      * 2. 等待正在处理的请求完成（由 Spring Boot 负责）
@@ -76,94 +79,52 @@ public class ShutdownListener implements ServletContextListener {
      */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("[ShutdownListener] ========================================");
-        System.out.println("[ShutdownListener] 应用正在关闭，开始清理资源...");
-        System.out.println("[ShutdownListener] ========================================");
-        
+        log.info("[ShutdownListener] ========================================");
+        log.info("[ShutdownListener] 应用正在关闭，开始清理资源...");
+        log.info("[ShutdownListener] ========================================");
+
         ServletContext context = sce.getServletContext();
-        
+
         // ===== 1. 清理字典缓存 =====
-        System.out.println("[ShutdownListener] 清理字典缓存...");
+        log.info("[ShutdownListener] 清理字典缓存...");
         Object dictCache = context.getAttribute("DICT_CACHE");
         if (dictCache != null) {
             ((java.util.Map<?, ?>) dictCache).clear();
-            System.out.println("[ShutdownListener] 字典缓存已清理");
+            log.info("[ShutdownListener] 字典缓存已清理");
         }
-        
+
         // ===== 2. 演示：关闭数据库连接池 =====
         // 【注意】本项目使用 Spring 管理的 HikariCP，不需要手动关闭
         // 这里只是演示如何关闭原生 JDBC 连接池
-        System.out.println("[ShutdownListener] 检查数据库连接池...");
-        // ===== 实际场景代码（注释） =====
-        // DataSource dataSource = (DataSource) context.getAttribute("dataSource");
-        // if (dataSource instanceof HikariDataSource) {
-        //     HikariDataSource hikariDS = (HikariDataSource) dataSource;
-        //     System.out.println("[ShutdownListener] 正在关闭数据库连接池...");
-        //     System.out.println("[ShutdownListener] 当前活跃连接数: " + hikariDS.getHikariPoolMXBean().getActiveConnections());
-        //     System.out.println("[ShutdownListener] 当前空闲连接数: " + hikariDS.getHikariPoolMXBean().getIdleConnections());
-        //     hikariDS.close();
-        //     System.out.println("[ShutdownListener] 数据库连接池已关闭");
-        // }
-        System.out.println("[ShutdownListener] 数据库连接池由 Spring 管理，无需手动关闭");
-        
+        log.info("[ShutdownListener] 检查数据库连接池...");
+        log.info("[ShutdownListener] 数据库连接池由 Spring 管理，无需手动关闭");
+
         // ===== 3. 演示：关闭线程池 =====
         // 【注意】本项目使用 Spring 管理的线程池（@Async），不需要手动关闭
         // 这里只是演示如何关闭原生线程池
-        System.out.println("[ShutdownListener] 检查线程池...");
-        // ===== 实际场景代码（注释） =====
-        // ExecutorService executor = (ExecutorService) context.getAttribute("executor");
-        // if (executor != null) {
-        //     System.out.println("[ShutdownListener] 正在关闭线程池...");
-        //     System.out.println("[ShutdownListener] 等待任务完成...");
-        //     executor.shutdown(); // 停止接收新任务
-        //     try {
-        //         // 等待正在执行的任务完成（最多等待 10 秒）
-        //         if (!executor.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
-        //             System.out.println("[ShutdownListener] 任务未完成，强制关闭...");
-        //             executor.shutdownNow(); // 强制关闭
-        //         }
-        //     } catch (InterruptedException e) {
-        //         System.err.println("[ShutdownListener] 等待任务完成时被中断");
-        //         executor.shutdownNow();
-        //         Thread.currentThread().interrupt();
-        //     }
-        //     System.out.println("[ShutdownListener] 线程池已关闭");
-        // }
-        System.out.println("[ShutdownListener] 线程池由 Spring 管理，无需手动关闭");
-        
+        log.info("[ShutdownListener] 检查线程池...");
+        log.info("[ShutdownListener] 线程池由 Spring 管理，无需手动关闭");
+
         // ===== 4. 演示：关闭 Redis 连接 =====
         // 【注意】本项目使用 Spring 管理的 RedisTemplate，不需要手动关闭
         // 这里只是演示如何关闭原生 Redis 连接
-        System.out.println("[ShutdownListener] 检查 Redis 连接...");
-        // ===== 实际场景代码（注释） =====
-        // RedisConnectionFactory factory = (RedisConnectionFactory) context.getAttribute("redisFactory");
-        // if (factory != null) {
-        //     System.out.println("[ShutdownListener] 正在关闭 Redis 连接...");
-        //     RedisConnection connection = factory.getConnection();
-        //     connection.close();
-        //     System.out.println("[ShutdownListener] Redis 连接已关闭");
-        // }
-        System.out.println("[ShutdownListener] Redis 连接由 Spring 管理，无需手动关闭");
-        
+        log.info("[ShutdownListener] 检查 Redis 连接...");
+        log.info("[ShutdownListener] Redis 连接由 Spring 管理，无需手动关闭");
+
         // ===== 5. 保存运行时状态（可选） =====
         // 某些应用需要在关闭前保存运行时状态，下次启动时恢复
         // 例如：保存当前处理进度、保存未发送的消息等
-        System.out.println("[ShutdownListener] 保存运行时状态...");
-        // ===== 实际场景代码（注释） =====
-        // System.out.println("[ShutdownListener] 保存处理进度到磁盘...");
-        // saveProgressToDisk();
-        // System.out.println("[ShutdownListener] 保存未发送的消息到数据库...");
-        // saveUnsentMessagesToDatabase();
-        System.out.println("[ShutdownListener] 无需保存运行时状态");
-        
-        System.out.println("[ShutdownListener] ========================================");
-        System.out.println("[ShutdownListener] 资源清理完成，应用可以安全关闭");
-        System.out.println("[ShutdownListener] ========================================");
+        log.info("[ShutdownListener] 保存运行时状态...");
+        log.info("[ShutdownListener] 无需保存运行时状态");
+
+        log.info("[ShutdownListener] ========================================");
+        log.info("[ShutdownListener] 资源清理完成，应用可以安全关闭");
+        log.info("[ShutdownListener] ========================================");
     }
 
     /**
      * 应用启动时触发
-     * 
+     *
      * 【说明】
      * ShutdownListener 主要关注应用关闭时的清理逻辑，
      * 启动时的初始化逻辑由 AppStartupListener 负责。
@@ -173,6 +134,6 @@ public class ShutdownListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("[ShutdownListener] 应用启动（ShutdownListener 仅关注关闭事件）");
+        log.info("[ShutdownListener] 应用启动（ShutdownListener 仅关注关闭事件）");
     }
 }

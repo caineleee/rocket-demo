@@ -3,6 +3,7 @@ package org.lee.rocket.train.common.filter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
@@ -38,12 +39,18 @@ import java.io.IOException;
  * 【安全考量】
  * 生产环境不应该使用 * 作为 Allow-Origin，应该配置具体的域名白名单。
  * 因为 * 意味着任何网站都可以调用你的接口，存在 CSRF 攻击风险。
+ *
+ * 【现状：已迁移到 Gateway】
+ * 本类是 Servlet 版 CORS 过滤器的学习示例（手动设置响应头，便于理解 CORS 原理）。
+ * 生产逻辑已迁移到 gateway-service 的 CorsGlobalFilter（WebFlux 版），微服务侧不再注册本过滤器
+ * （FilterConfig 中的注册代码已注释）。本类保留供学习 Servlet Filter 机制。
  */
+@Slf4j
 public class CorsFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        System.out.println("[CorsFilter] init() 被调用 —— 跨域过滤器初始化完成");
+        log.info("[CorsFilter] init() 被调用 —— 跨域过滤器初始化完成");
     }
 
     /**
@@ -101,7 +108,7 @@ public class CorsFilter implements Filter {
         // 直接返回 200 OK，不调用 chain.doFilter()
         if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
             httpResponse.setStatus(HttpServletResponse.SC_OK);
-            System.out.println("[CorsFilter] OPTIONS 预检请求，直接返回（不继续执行后续 Filter/Servlet）");
+            log.debug("[CorsFilter] OPTIONS 预检请求，直接返回（不继续执行后续 Filter/Servlet）");
             return; // 直接返回，不调用 chain.doFilter()
         }
 
@@ -112,6 +119,6 @@ public class CorsFilter implements Filter {
 
     @Override
     public void destroy() {
-        System.out.println("[CorsFilter] destroy() 被调用 —— 跨域过滤器即将被销毁");
+        log.info("[CorsFilter] destroy() 被调用 —— 跨域过滤器即将被销毁");
     }
 }

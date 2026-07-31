@@ -3,6 +3,7 @@ package org.lee.rocket.train.common.filter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -43,6 +44,7 @@ import java.util.UUID;
  * 4. 计算耗时（当前时间 - 开始时间）
  * 5. 输出结构化日志 + 响应头
  */
+@Slf4j
 public class TimingFilter implements Filter {
 
     /**
@@ -58,7 +60,7 @@ public class TimingFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        System.out.println("[TimingFilter] init() 被调用 —— 接口耗时统计过滤器初始化完成");
+        log.info("[TimingFilter] init() 被调用 —— 接口耗时统计过滤器初始化完成");
     }
 
     /**
@@ -107,9 +109,8 @@ public class TimingFilter implements Filter {
         // 【更高精度】如果需要微秒级精度，可以使用 System.nanoTime()
         long startTime = System.currentTimeMillis();
 
-        System.out.println("[TimingFilter] 请求开始 | method=" + httpRequest.getMethod()
-                + " | path=" + httpRequest.getRequestURI()
-                + " | traceId=" + traceId);
+        log.debug("[TimingFilter] 请求开始 | method={} | path={} | traceId={}",
+                httpRequest.getMethod(), httpRequest.getRequestURI(), traceId);
 
         // ===== 3. 放行请求，执行业务逻辑 =====
         try {
@@ -130,19 +131,12 @@ public class TimingFilter implements Filter {
             // - 慢请求（>= 1000ms）：WARN 级别，便于快速发现性能问题
             if (cost >= SLOW_REQUEST_THRESHOLD) {
                 // 慢请求告警
-                System.out.println("[TimingFilter] [SLOW] 慢请求告警 | method=" + httpRequest.getMethod()
-                        + " | path=" + httpRequest.getRequestURI()
-                        + " | status=" + status
-                        + " | cost=" + cost + "ms"
-                        + " | traceId=" + traceId
-                        + " | 阈值=" + SLOW_REQUEST_THRESHOLD + "ms");
+                log.warn("[TimingFilter] [SLOW] 慢请求告警 | method={} | path={} | status={} | cost={}ms | traceId={} | 阈值={}ms",
+                        httpRequest.getMethod(), httpRequest.getRequestURI(), status, cost, traceId, SLOW_REQUEST_THRESHOLD);
             } else {
                 // 正常请求
-                System.out.println("[TimingFilter] 请求完成 | method=" + httpRequest.getMethod()
-                        + " | path=" + httpRequest.getRequestURI()
-                        + " | status=" + status
-                        + " | cost=" + cost + "ms"
-                        + " | traceId=" + traceId);
+                log.info("[TimingFilter] 请求完成 | method={} | path={} | status={} | cost={}ms | traceId={}",
+                        httpRequest.getMethod(), httpRequest.getRequestURI(), status, cost, traceId);
             }
 
             // ===== 6. 将耗时添加到响应头 =====
@@ -154,6 +148,6 @@ public class TimingFilter implements Filter {
 
     @Override
     public void destroy() {
-        System.out.println("[TimingFilter] destroy() 被调用 —— 接口耗时统计过滤器即将被销毁");
+        log.info("[TimingFilter] destroy() 被调用 —— 接口耗时统计过滤器即将被销毁");
     }
 }

@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -32,7 +33,10 @@ import java.time.format.DateTimeFormatter;
  * - init()：容器启动时执行一次，用于初始化资源（如数据库连接、配置加载）
  * - service()：每次请求执行一次，处理具体的 HTTP 请求
  * - destroy()：容器关闭时执行一次，用于释放资源（如关闭连接池）
+ *
+ * 【日志】使用 SLF4J（通过 Lombok @Slf4j 注入 log 字段）替代 System.out，便于统一日志级别与输出。
  */
+@Slf4j
 public class HealthServlet extends HttpServlet {
 
     /**
@@ -58,7 +62,7 @@ public class HealthServlet extends HttpServlet {
         super.init();
         // 打印日志，方便观察 Servlet 生命周期
         // 在启动日志中看到这条，说明 HealthServlet 已成功初始化
-        System.out.println("[HealthServlet] init() 被调用 —— Servlet 初始化完成（只执行一次）");
+        log.info("[HealthServlet] init() 被调用 —— Servlet 初始化完成（只执行一次）");
     }
 
     /**
@@ -78,7 +82,7 @@ public class HealthServlet extends HttpServlet {
 
         // 打印日志，观察每次请求的执行情况
         // 对比 init() 只执行一次，doGet() 每次请求都会执行
-        System.out.println("[HealthServlet] doGet() 被调用 —— 处理健康检查请求");
+        log.debug("[HealthServlet] doGet() 被调用 —— 处理健康检查请求");
 
         // ===== 设置响应头 =====
 
@@ -140,6 +144,6 @@ public class HealthServlet extends HttpServlet {
         super.destroy();
         // 打印日志，方便观察 Servlet 生命周期
         // 在关闭日志中看到这条，说明 HealthServlet 正在被销毁
-        System.out.println("[HealthServlet] destroy() 被调用 —— Servlet 即将被销毁（只执行一次）");
+        log.info("[HealthServlet] destroy() 被调用 —— Servlet 即将被销毁（只执行一次）");
     }
 }

@@ -1,6 +1,7 @@
 package org.lee.rocket.train.common.config;
 
 import jakarta.servlet.Filter;
+import lombok.extern.slf4j.Slf4j;
 import org.lee.rocket.train.common.filter.EncodingFilter;
 import org.lee.rocket.train.common.filter.TimingFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -35,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * 所有 Filter 都映射到 /*，表示拦截所有请求。
  * 如果需要排除某些 URL，可以使用 setUrlPatterns() 指定具体的 URL 模式。
  */
+@Slf4j
 @Configuration
 public class FilterConfig {
 
@@ -65,9 +67,9 @@ public class FilterConfig {
         // 设置执行顺序
         // 数字越小优先级越高，EncodingFilter 必须第一个执行
         registration.setOrder(1);
-        
-        System.out.println("[FilterConfig] 注册 EncodingFilter，order=1，URL: /*");
-        
+
+        log.info("[FilterConfig] 注册 EncodingFilter，order=1，URL: /*");
+
         return registration;
     }
 
@@ -82,38 +84,24 @@ public class FilterConfig {
     // @Bean
     // public FilterRegistrationBean<Filter> corsFilterRegistration() {
     //     FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
-    //     
+    //
     //     registration.setFilter(new CorsFilter());
     //     registration.addUrlPatterns("/*");
     //     registration.setName("corsFilter");
     //     registration.setOrder(2);
-    //     
-    //     System.out.println("[FilterConfig] 注册 CorsFilter，order=2，URL: /*");
-    //     
+    //
+    //     log.info("[FilterConfig] 注册 CorsFilter，order=2，URL: /*");
+    //
     //     return registration;
     // }
 
     /**
-     * 【已迁移到 Gateway】
-     * XSS 安全过滤器已迁移到 gateway-service 的 XssGlobalFilter
-     * 原逻辑：XSS 安全过滤，在编码设置之后执行
-     * 迁移后：Gateway 统一处理，微服务不再需要注册 XssFilter
+     * 【已迁移到 Gateway 且类已删除】
+     * XSS 安全过滤器已迁移到 gateway-service 的 XssGlobalFilter；原 Servlet 版 XssFilter 类已删除，
+     * 微服务不再保留 XSS 过滤逻辑，由 Gateway 统一处理。
      *
      * @see org.lee.rocket.train.gateway.filter.XssGlobalFilter
      */
-    // @Bean
-    // public FilterRegistrationBean<Filter> xssFilterRegistration() {
-    //     FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
-    //     
-    //     registration.setFilter(new XssFilter());
-    //     registration.addUrlPatterns("/*");
-    //     registration.setName("xssFilter");
-    //     registration.setOrder(3);
-    //     
-    //     System.out.println("[FilterConfig] 注册 XssFilter，order=3，URL: /*");
-    //     
-    //     return registration;
-    // }
 
     /**
      * 注册接口耗时统计过滤器
@@ -133,9 +121,9 @@ public class FilterConfig {
         registration.addUrlPatterns("/*");
         registration.setName("timingFilter");
         registration.setOrder(2);  // 迁移后调整为 order=2（原来是 order=4）
-        
-        System.out.println("[FilterConfig] 注册 TimingFilter，order=2，URL: /*");
-        
+
+        log.info("[FilterConfig] 注册 TimingFilter，order=2，URL: /*");
+
         return registration;
     }
 }

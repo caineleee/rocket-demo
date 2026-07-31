@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,6 +34,7 @@ import java.io.PrintWriter;
  * 为了演示，这个类模拟一个"第三方 Servlet"，它有自己的逻辑，不依赖 Spring。
  * 实际项目中，这个类可能来自第三方 JAR 包，你甚至看不到源码。
  */
+@Slf4j
 public class ThirdPartyServlet extends HttpServlet {
 
     /**
@@ -58,13 +60,13 @@ public class ThirdPartyServlet extends HttpServlet {
         String configFile = getServletConfig().getInitParameter("configFile");
         String debugMode = getServletConfig().getInitParameter("debugMode");
 
-        System.out.println("[ThirdPartyServlet] init() 被调用");
-        System.out.println("[ThirdPartyServlet] 初始化参数 configFile: " + configFile);
-        System.out.println("[ThirdPartyServlet] 初始化参数 debugMode: " + debugMode);
+        log.info("[ThirdPartyServlet] init() 被调用");
+        log.info("[ThirdPartyServlet] 初始化参数 configFile: {}", configFile);
+        log.info("[ThirdPartyServlet] 初始化参数 debugMode: {}", debugMode);
 
         // 模拟第三方 Servlet 的初始化逻辑
         // 比如：加载配置文件、初始化连接池、预热缓存等
-        System.out.println("[ThirdPartyServlet] 第三方 Servlet 初始化完成（模拟）");
+        log.info("[ThirdPartyServlet] 第三方 Servlet 初始化完成（模拟）");
     }
 
     /**
@@ -83,7 +85,7 @@ public class ThirdPartyServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        System.out.println("[ThirdPartyServlet] 处理第三方 Servlet 请求");
+        log.info("[ThirdPartyServlet] 处理第三方 Servlet 请求");
 
         // 设置响应头
         response.setContentType("text/html;charset=UTF-8");
@@ -124,10 +126,10 @@ public class ThirdPartyServlet extends HttpServlet {
     @Override
     public void destroy() {
         super.destroy();
-        System.out.println("[ThirdPartyServlet] destroy() 被调用 —— 第三方 Servlet 即将被销毁");
+        log.info("[ThirdPartyServlet] destroy() 被调用 —— 第三方 Servlet 即将被销毁");
 
         // 模拟第三方 Servlet 的清理逻辑
         // 比如：关闭连接池、保存运行时状态、释放文件句柄等
-        System.out.println("[ThirdPartyServlet] 第三方 Servlet 资源清理完成（模拟）");
+        log.info("[ThirdPartyServlet] 第三方 Servlet 资源清理完成（模拟）");
     }
 }

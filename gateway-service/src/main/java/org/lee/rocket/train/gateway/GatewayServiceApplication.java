@@ -1,5 +1,6 @@
 package org.lee.rocket.train.gateway;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -25,19 +26,23 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - Gateway 基于 WebFlux（响应式编程），不能使用 spring-boot-starter-web
  * - Filter 要用 GlobalFilter，不能用 Servlet Filter
  * - 不能使用 @EnableDubbo（Gateway 不参与 Dubbo 调用）
+ *
+ * 【日志】
+ * 启动横幅使用 SLF4J（通过 Lombok @Slf4j 注入 log 字段）输出，替代 System.out。
  */
 // 排除 DataSource 自动装配：Gateway 基于 WebFlux 仅依赖 Redis（响应式），不连接数据库；
 // 但 common 模块（编译期依赖）引入了 mybatis-plus-spring-boot3-starter，会传递性触发
 // DataSourceAutoConfiguration，因 Gateway 无任何数据源配置而以 "Failed to determine a suitable driver class" 启动失败
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableDiscoveryClient  // 启用服务发现（从 Nacos 获取服务列表）
+@Slf4j
 public class GatewayServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(GatewayServiceApplication.class, args);
-        System.out.println("========================================");
-        System.out.println("Gateway Service 启动成功！");
-        System.out.println("Gateway 地址: http://localhost:8080");
-        System.out.println("========================================");
+        log.info("========================================");
+        log.info("Gateway Service 启动成功！");
+        log.info("Gateway 地址: http://localhost:8080");
+        log.info("========================================");
     }
 }

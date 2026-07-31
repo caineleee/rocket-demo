@@ -3,6 +3,7 @@ package org.lee.rocket.train.common.listener;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionListener;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +50,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 【本实现】
  * 使用 AtomicInteger 统计单机在线人数。
  * 同时将在线人数存储到 ServletContext 中，供其他组件使用。
+ *
  */
+@Slf4j
 public class SessionListener implements HttpSessionListener {
 
     /**
@@ -88,8 +91,8 @@ public class SessionListener implements HttpSessionListener {
         ServletContext context = se.getSession().getServletContext();
         context.setAttribute("ONLINE_COUNT", currentCount);
         
-        System.out.println("[SessionListener] Session 创建 | sessionId=" 
-            + se.getSession().getId() + " | 当前在线人数=" + currentCount);
+        log.info("[SessionListener] Session 创建 | sessionId={} | 当前在线人数={}",
+            se.getSession().getId(), currentCount);
     }
 
     /**
@@ -124,8 +127,8 @@ public class SessionListener implements HttpSessionListener {
         ServletContext context = se.getSession().getServletContext();
         context.setAttribute("ONLINE_COUNT", currentCount);
         
-        System.out.println("[SessionListener] Session 销毁 | sessionId=" 
-            + se.getSession().getId() + " | 当前在线人数=" + currentCount);
+        log.info("[SessionListener] Session 销毁 | sessionId={} | 当前在线人数={}",
+            se.getSession().getId(), currentCount);
     }
 
     /**

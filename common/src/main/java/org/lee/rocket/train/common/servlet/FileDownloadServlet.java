@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,11 @@ import java.nio.charset.StandardCharsets;
  *
  * 【注册方式】
  * 通过 ServletConfig.java 中的 ServletRegistrationBean 注册，URL 映射为 /download/*
+ *
+ * 【日志】
+ * 使用 SLF4J（通过 Lombok @Slf4j 注入 log 字段）替代 System.out/err，便于统一日志级别与输出。
  */
+@Slf4j
 public class FileDownloadServlet extends HttpServlet {
 
     /**
@@ -68,7 +73,7 @@ public class FileDownloadServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        System.out.println("[FileDownloadServlet] 开始处理文件下载请求");
+        log.info("[FileDownloadServlet] 开始处理文件下载请求");
 
         // ===== 1. 准备文件数据 =====
         // 这里动态生成一个约 1MB 的测试数据
@@ -131,7 +136,7 @@ public class FileDownloadServlet extends HttpServlet {
             // 确保缓冲区中的最后一块数据被发送
             outputStream.flush();
 
-            System.out.println("[FileDownloadServlet] 文件传输完成，总大小: " + totalBytes + " bytes");
+            log.info("[FileDownloadServlet] 文件传输完成，总大小: {} bytes", totalBytes);
 
         } finally {
             // ===== 4. 关闭流（防止资源泄漏） =====
@@ -150,10 +155,10 @@ public class FileDownloadServlet extends HttpServlet {
             if (inputStream != null) {
                 try {
                     inputStream.close();
-                    System.out.println("[FileDownloadServlet] 输入流已关闭");
+                    log.info("[FileDownloadServlet] 输入流已关闭");
                 } catch (IOException e) {
                     // 关闭流时的异常通常无法恢复，只记录日志
-                    System.err.println("[FileDownloadServlet] 关闭输入流失败: " + e.getMessage());
+                    log.error("[FileDownloadServlet] 关闭输入流失败: {}", e.getMessage());
                 }
             }
             // 输出流不关闭，由 Servlet 容器管理

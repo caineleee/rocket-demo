@@ -3,6 +3,7 @@ package org.lee.rocket.train.common.filter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
@@ -33,6 +34,7 @@ import java.io.IOException;
  * 【注册方式】
  * 通过 FilterConfig.java 中的 FilterRegistrationBean 注册，URL 模式为 /*（所有请求）
  */
+@Slf4j
 public class EncodingFilter implements Filter {
 
     /**
@@ -49,15 +51,15 @@ public class EncodingFilter implements Filter {
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        System.out.println("[EncodingFilter] init() 被调用 —— 字符编码过滤器初始化完成");
-        
+        log.info("[EncodingFilter] init() 被调用 —— 字符编码过滤器初始化完成");
+
         // 读取初始化参数（如果配置了的话）
         // 例如：在 FilterRegistrationBean 中设置 registration.addInitParameter("encoding", "UTF-8");
         String encoding = filterConfig.getInitParameter("encoding");
         if (encoding != null) {
-            System.out.println("[EncodingFilter] 配置的编码: " + encoding);
+            log.info("[EncodingFilter] 配置的编码: {}", encoding);
         } else {
-            System.out.println("[EncodingFilter] 使用默认编码: UTF-8");
+            log.info("[EncodingFilter] 使用默认编码: UTF-8");
         }
     }
 
@@ -87,7 +89,7 @@ public class EncodingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        System.out.println("[EncodingFilter] doFilter() 被调用 —— 设置字符编码");
+        log.debug("[EncodingFilter] doFilter() 被调用 —— 设置字符编码");
 
         // 将 ServletRequest 转换为 HttpServletRequest
         // 因为只有 HttpServletRequest 才有 setCharacterEncoding() 方法
@@ -132,7 +134,7 @@ public class EncodingFilter implements Filter {
         chain.doFilter(request, response);
 
         // 这里的代码会在响应返回时执行
-        System.out.println("[EncodingFilter] 请求处理完成，响应已返回");
+        log.debug("[EncodingFilter] 请求处理完成，响应已返回");
     }
 
     /**
@@ -148,6 +150,6 @@ public class EncodingFilter implements Filter {
      */
     @Override
     public void destroy() {
-        System.out.println("[EncodingFilter] destroy() 被调用 —— 字符编码过滤器即将被销毁");
+        log.info("[EncodingFilter] destroy() 被调用 —— 字符编码过滤器即将被销毁");
     }
 }

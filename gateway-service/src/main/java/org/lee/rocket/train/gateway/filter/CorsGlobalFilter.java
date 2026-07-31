@@ -1,5 +1,6 @@
 package org.lee.rocket.train.gateway.filter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -36,8 +37,12 @@ import reactor.core.publisher.Mono;
  * - Access-Control-Allow-Methods：允许哪些 HTTP 方法
  * - Access-Control-Allow-Headers：允许哪些请求头
  * - Access-Control-Max-Age：预检请求的缓存时间（秒）
+ *
+ * 【日志】
+ * 使用 SLF4J（通过 Lombok @Slf4j 注入 log 字段）替代 System.out，便于统一日志级别与输出。
  */
 @Component
+@Slf4j
 public class CorsGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
@@ -77,7 +82,7 @@ public class CorsGlobalFilter implements GlobalFilter, Ordered {
         // 直接返回 200 OK，不调用 chain.filter()
         if (request.getMethod() == HttpMethod.OPTIONS) {
             response.setStatusCode(HttpStatus.OK);
-            System.out.println("[CorsGlobalFilter] OPTIONS 预检请求，直接返回（不继续执行后续 Filter）");
+            log.debug("[CorsGlobalFilter] OPTIONS 预检请求，直接返回（不继续执行后续 Filter）");
             return response.setComplete();
         }
 

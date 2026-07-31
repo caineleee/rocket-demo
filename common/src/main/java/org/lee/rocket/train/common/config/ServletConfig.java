@@ -1,6 +1,7 @@
 package org.lee.rocket.train.common.config;
 
 import jakarta.servlet.Servlet;
+import lombok.extern.slf4j.Slf4j;
 import org.lee.rocket.train.common.servlet.FileDownloadServlet;
 import org.lee.rocket.train.common.servlet.HealthServlet;
 import org.lee.rocket.train.common.servlet.ThirdPartyServlet;
@@ -35,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * 负数或 0 表示延迟加载（第一次访问时才加载）。
  */
 @Configuration
+@Slf4j
 public class ServletConfig {
 
     /**
@@ -61,7 +63,7 @@ public class ServletConfig {
         // 正数表示启动时加载，数字越小优先级越高
         registration.setLoadOnStartup(1);
         
-        System.out.println("[ServletConfig] 注册 HealthServlet，URL: /health");
+        log.info("[ServletConfig] 注册 HealthServlet，URL: /health");
         
         return registration;
     }
@@ -92,7 +94,7 @@ public class ServletConfig {
         registration.setName("fileDownloadServlet");
         registration.setLoadOnStartup(2);
         
-        System.out.println("[ServletConfig] 注册 FileDownloadServlet，URL: /download/*");
+        log.info("[ServletConfig] 注册 FileDownloadServlet，URL: /download/*");
         
         return registration;
     }
@@ -123,8 +125,8 @@ public class ServletConfig {
         registration.addInitParameter("configFile", "/config/third-party.properties");
         registration.addInitParameter("debugMode", "true");
         
-        System.out.println("[ServletConfig] 注册 ThirdPartyServlet，URL: /third-party/*");
-        System.out.println("[ServletConfig] 初始化参数: configFile=/config/third-party.properties, debugMode=true");
+        log.info("[ServletConfig] 注册 ThirdPartyServlet，URL: /third-party/*");
+        log.info("[ServletConfig] 初始化参数: configFile=/config/third-party.properties, debugMode=true");
         
         return registration;
     }

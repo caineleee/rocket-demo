@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 应用启动预热监听器
@@ -48,7 +49,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 【本实现】
  * 从 classpath:data/dict.json 文件读取字典数据，加载到 ConcurrentHashMap 中。
  * 模拟从数据库或配置中心加载数据的过程。
+ *
+ * 【日志】
+ * 使用 SLF4J（通过 Lombok @Slf4j 注入 log 字段）替代 System.out/err，便于统一日志级别与输出。
  */
+@Slf4j
 public class AppStartupListener implements ServletContextListener {
 
     /**
@@ -89,7 +94,7 @@ public class AppStartupListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("[AppStartupListener] 应用启动，开始预热字典数据...");
+        log.info("[AppStartupListener] 应用启动，开始预热字典数据...");
         
         long startTime = System.currentTimeMillis();
         
@@ -145,18 +150,18 @@ public class AppStartupListener implements ServletContextListener {
             context.setAttribute("DICT_CACHE", DICT_CACHE);
             
             long cost = System.currentTimeMillis() - startTime;
-            System.out.println("[AppStartupListener] 字典数据预热完成，共加载 " 
-                + DICT_CACHE.size() + " 个字典类型，耗时 " + cost + "ms");
-            
+            log.info("[AppStartupListener] 字典数据预热完成，共加载 {} 个字典类型，耗时 {}ms",
+                DICT_CACHE.size(), cost);
+
             // 打印加载的字典类型
             for (String dictType : DICT_CACHE.keySet()) {
-                System.out.println("[AppStartupListener]   - " + dictType + ": " 
-                    + DICT_CACHE.get(dictType).size() + " 个字典项");
+                log.info("[AppStartupListener]   - {}: {} 个字典项",
+                    dictType, DICT_CACHE.get(dictType).size());
             }
-            
+
         } catch (Exception e) {
             // 加载失败，抛出异常，让应用启动失败
-            System.err.println("[AppStartupListener] 字典数据预热失败：" + e.getMessage());
+            log.error("[AppStartupListener] 字典数据预热失败：{}", e.getMessage());
             throw new RuntimeException("字典数据预热失败", e);
         }
     }
@@ -176,10 +181,10 @@ public class AppStartupListener implements ServletContextListener {
      */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("[AppStartupListener] 应用关闭，清理字典缓存...");
-        
+        log.info("[AppStartupListener] 应用关闭，清理字典缓存...");
+
         DICT_CACHE.clear();
-        
-        System.out.println("[AppStartupListener] 字典缓存已清理");
+
+        log.info("[AppStartupListener] 字典缓存已清理");
     }
 }

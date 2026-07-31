@@ -1,6 +1,7 @@
 package org.lee.rocket.train.common.config;
 
 import java.util.EventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.lee.rocket.train.common.listener.AppStartupListener;
 import org.lee.rocket.train.common.listener.SessionListener;
 import org.lee.rocket.train.common.listener.ShutdownListener;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Configuration;
  * - ServletRequestListener 在请求创建/销毁时执行
  */
 @Configuration
+@Slf4j
 public class ListenerConfig {
 
     /**
@@ -56,7 +58,7 @@ public class ListenerConfig {
         // 设置 Listener 实例
         registration.setListener(new AppStartupListener());
         
-        System.out.println("[ListenerConfig] 注册 AppStartupListener");
+        log.info("[ListenerConfig] 注册 AppStartupListener");
         
         return registration;
     }
@@ -75,7 +77,7 @@ public class ListenerConfig {
         
         registration.setListener(new SessionListener());
         
-        System.out.println("[ListenerConfig] 注册 SessionListener");
+        log.info("[ListenerConfig] 注册 SessionListener");
         
         return registration;
     }
@@ -94,7 +96,7 @@ public class ListenerConfig {
         
         registration.setListener(new ShutdownListener());
         
-        System.out.println("[ListenerConfig] 注册 ShutdownListener");
+        log.info("[ListenerConfig] 注册 ShutdownListener");
         
         return registration;
     }
