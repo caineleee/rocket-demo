@@ -110,5 +110,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- spring-dotenv（Spring Boot 3 自动集成版）：Spring Boot 启动时自动读取项目根目录 .env 文件，
+             将变量灌进 Spring Environment（供 application.yml 占位符解析）+ System.getProperties()
+             （供 JwtUtil 等纯静态工具类通过 System.getProperty() 读取）。
+             不设 optional，让所有依赖 common 的服务（含 gateway）自动继承，无需各服务单独声明。
+             版本由父 pom 的 spring-dotenv-bom 管理。 -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>springboot3-dotenv</artifactId>
+            <!-- 显式指定 version：dependencyManagement(BOM)不传递到 transitive 依赖解析，
+                 common 作为 jar 被 user-service 等引用时，若不写 version 会报
+                 "dependencies.dependency.version is missing"，common 自身 pom 被判定 invalid。 -->
+            <version>${spring-dotenv.version}</version>
+        </dependency>
+
 	</dependencies>
 </project>

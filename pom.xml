@@ -43,7 +43,80 @@
         <spring-cloud-alibaba.version>2023.0.3.2</spring-cloud-alibaba.version> 
         <springdoc.version>2.8.16</springdoc.version>
         <mysql-connector.version>8.0.33</mysql-connector.version>
+        <!-- spring-dotenv：Spring Boot 启动时自动读取项目根目录 .env，替代 source .env -->
+        <spring-dotenv.version>5.1.0</spring-dotenv.version>
+        <!-- exec-maven-plugin：在 initialize phase 自动跑 update-env.sh，检测局域网 IP 并更新 .env -->
+        <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
 	</properties>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- spring-boot-maven-plugin 公共配置：
+				     JVM 参数必须在 JVM 启动前设置（早于 Spring Environment），不能靠 .env/spring-dotenv。
+				     (1) -Dnacos.logging.default.config.enabled=false
+				         禁用 Nacos 客户端默认 logback 配置，避免与项目 logback-spring.xml 冲突
+				         （"already has an associated action supplier"），Nacos 客户端在 Spring Environment
+				          准备前就静态初始化 logback 适配器，application.yml 配置来不及生效。
+				     (2) -DJM.SNAPSHOT.PATH
+				         指定 Nacos 本地缓存目录到项目内 .nacos-cache，避免 ~/nacos 在 macOS 沙箱下不可写。
+				     (3) -Dspringdotenv.directory=${project.basedir}/..
+				         指定 .env 文件所在目录为项目根目录。spring-dotenv 默认在 ./（工作目录=子模块目录）
+				         找 .env，但 .env 在项目根目录；不设此参数会找不到 .env（ignoreIfMissing=true 默认
+				         静默忽略，无报错），JwtUtil 拿不到 .env 变量只能用兜底值。
+				     (4) -Dspringdotenv.exportToSystemProperties=true
+				         把 .env 变量导出到 System.getProperties()，供 JwtUtil 等纯静态工具类通过
+				         System.getProperty() 读取。该参数原写在 Nacos 共享配置，但 Nacos 配置由
+				         PropertySourceLocator 在 context refresh 阶段加载，晚于 spring-dotenv 的
+				         EnvironmentPostProcessor，导致 spring-dotenv 读不到、默认 false 不导出。
+				         改用 JVM -D 参数，在 JVM 启动时就生效，早于所有 Spring 扩展点。
+				     子模块只声明 plugin 不写 configuration 即可继承此配置。 -->
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<jvmArguments>
+							-Dnacos.logging.default.config.enabled=false
+							-DJM.SNAPSHOT.PATH=${project.basedir}/../.nacos-cache
+							-Dspringdotenv.directory=${project.basedir}/..
+							-Dspringdotenv.exportToSystemProperties=true
+						</jvmArguments>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<!-- exec-maven-plugin：mvn 生命周期 initialize 阶段自动执行 update-env.sh
+			     检测宿主机局域网 IP 并同步 .env 的 HOST_IP / NACOS_SERVER_ADDR，
+			     解决切换网段后 RocketMQ broker 注册地址失效问题。
+			     绑定 initialize phase（早于 spring-boot:run），所有子模块继承执行（脚本幂等，无害）。
+			     successCodes=0：.env 不存在时 update-env.sh 退出码非 0，不应阻断构建。 -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>${exec-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>update-env-on-startup</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>bash</executable>
+							<arguments>
+								<argument>${project.basedir}/../scripts/update-env.sh</argument>
+							</arguments>
+							<successCodes>
+								<successCode>0</successCode>
+							</successCodes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 	<dependencyManagement>
 		<dependencies>
             <!-- 内部模块 -->
@@ -78,6 +151,16 @@
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
                 <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- ③ spring-dotenv BOM：让 Spring Boot 自动读取项目根目录 .env 文件
+                 （替代原 dev-start.sh 的 source .env；变量灌进 Spring Environment + System.getProperties()） -->
+            <dependency>
+                <groupId>me.paulschwarz</groupId>
+                <artifactId>spring-dotenv-bom</artifactId>
+                <version>${spring-dotenv.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

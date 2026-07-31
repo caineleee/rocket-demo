@@ -15,21 +15,33 @@ import java.util.Map;
  * 提供 JWT Token 的生成、解析、验证等功能
  *
  * 【密钥外部化说明】
- * 密钥、Access/Refresh Token 过期时间均从环境变量读取（见 .env 的 JWT_SECRET / JWT_ACCESS_EXPIRE /
- * JWT_REFRESH_EXPIRE），不再硬编码到 Java 源码中，可在不重新编译的情况下调整。
+ * 密钥、Access/Refresh Token 过期时间均从系统属性读取（由 spring-dotenv 从 .env 注入，
+ * 见 .env 的 JWT_SECRET / JWT_ACCESS_EXPIRE / JWT_REFRESH_EXPIRE），不再硬编码到 Java 源码中，
+ * 可在不重新编译的情况下调整。
  *
- * 【为什么读环境变量而不是 @Value 注入？】
+ * 【为什么用 System.getProperty() 而不是 @Value 注入？】
  * JwtUtil 是纯静态工具类，被 Gateway（WebFlux）和各业务服务共用。Gateway 的启动类在
  * org.lee.rocket.train.gateway 包下，默认只扫描该包及其子包，不会扫描 common 包，因此
  * common 里的 @Configuration / @Component 不会在 Gateway 中被实例化。如果 JwtUtil 改成依赖
  * Spring Bean 注入密钥，Gateway 里 JwtUtil 会因未被配置而 SECRET_KEY 为 null，认证全线 500。
- * 改用 System.getenv() 读取环境变量，零 Spring 依赖，Gateway 与所有服务都通用。
- * application.yml 里也保留了 jwt.secret 等配置项（${JWT_SECRET:...}）便于查阅，二者读取同一环境变量。
+ * 改用 System.getProperty() 读取系统属性，零 Spring 依赖，Gateway 与所有服务都通用。
+ *
+ * 【为什么用 System.getProperty() 而不是 System.getenv()？】
+ * System.getenv() 只能读 OS 真实环境变量（需 shell export / source .env 注入），Java 运行时无法修改；
+ * spring-dotenv 读取 .env 后通过 EnvironmentPostProcessor 把变量灌进 System.getProperties()
+ * （需在 Nacos 共享配置开启 springdotenv.export-to-system-properties=true），但不能灌进 getenv()。
+ * 因此改用 System.getProperty()，配合 spring-dotenv 即可"零 source 启动"。
+ *
+ * 【时序安全性】
+ * spring-dotenv 在 EnvironmentPostProcessor 阶段执行（Spring Boot 最早的扩展点，早于所有 Bean 实例化）；
+ * JwtUtil 的 static final 字段在类加载时初始化，而类加载发生在调用方 Bean 实例化时，远晚于 export，
+ * 故 System.getProperty() 能取到 .env 的值。
+ * application.yml 里也保留了 jwt.secret 等配置项（${JWT_SECRET:...}）便于查阅，二者读取同一来源。
  */
 public class JwtUtil {
 
     /**
-     * JWT 签名密钥（原始字符串，从环境变量 JWT_SECRET 读取）
+     * JWT 签名密钥（原始字符串，从系统属性 JWT_SECRET 读取，由 spring-dotenv 从 .env 注入）
      *
      * 【长度要求】HMAC-SHA256 算法要求密钥长度 >= 32 字节（256 位），否则 jjwt 在
      * Keys.hmacShaKeyFor() 阶段抛出 WeakKeyException，导致 JwtUtil 静态初始化失败
@@ -37,26 +49,26 @@ public class JwtUtil {
      * 此前 "rocket-demo-jwt-secret-key-2026" 仅 31 字节（248 位），差 1 字节触发该异常，
      * 已补齐至 38 字节（304 位）。
      *
-     * 【兜底值】未设置 JWT_SECRET 环境变量时使用开发兜底值；生产环境必须通过 .env / 启动参数
+     * 【兜底值】未设置 JWT_SECRET 系统属性时使用开发兜底值；生产环境必须通过 .env / 启动参数
      * 设置 JWT_SECRET 覆盖此值，避免密钥泄露。
      */
-    private static final String SECRET_KEY_RAW = System.getenv("JWT_SECRET") != null
-            ? System.getenv("JWT_SECRET")
+    private static final String SECRET_KEY_RAW = System.getProperty("JWT_SECRET") != null
+            ? System.getProperty("JWT_SECRET")
             : "rocket-demo-jwt-secret-key-2026-secure";
 
     /**
      * 使用 HMAC-SHA256 算法生成签名密钥
-     * 密钥来源：环境变量 JWT_SECRET
+     * 密钥来源：系统属性 JWT_SECRET（由 spring-dotenv 从 .env 注入）
      */
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_RAW.getBytes(StandardCharsets.UTF_8));
 
     /**
-     * Access Token 过期时间（毫秒），从环境变量 JWT_ACCESS_EXPIRE 读取，默认 30 分钟
+     * Access Token 过期时间（毫秒），从系统属性 JWT_ACCESS_EXPIRE 读取，默认 30 分钟
      */
     private static final long ACCESS_TOKEN_EXPIRE_TIME = parseLongEnv("JWT_ACCESS_EXPIRE", 1800000L);
 
     /**
-     * Refresh Token 过期时间（毫秒），从环境变量 JWT_REFRESH_EXPIRE 读取，默认 7 天
+     * Refresh Token 过期时间（毫秒），从系统属性 JWT_REFRESH_EXPIRE 读取，默认 7 天
      */
     private static final long REFRESH_TOKEN_EXPIRE_TIME = parseLongEnv("JWT_REFRESH_EXPIRE", 604800000L);
 
@@ -64,21 +76,21 @@ public class JwtUtil {
     }
 
     /**
-     * 解析 long 类型环境变量，解析失败或未设置时返回默认值
+     * 解析 long 类型系统属性，解析失败或未设置时返回默认值
      *
-     * @param envName      环境变量名
+     * @param propName     系统属性名
      * @param defaultValue 默认值
      * @return 解析后的 long 值
      */
-    private static long parseLongEnv(String envName, long defaultValue) {
-        String value = System.getenv(envName);
+    private static long parseLongEnv(String propName, long defaultValue) {
+        String value = System.getProperty(propName);
         if (value == null || value.isBlank()) {
             return defaultValue;
         }
         try {
             return Long.parseLong(value.trim());
         } catch (NumberFormatException e) {
-            // 环境变量格式非法时回退默认值，避免启动失败
+            // 系统属性格式非法时回退默认值，避免启动失败
             return defaultValue;
         }
     }
