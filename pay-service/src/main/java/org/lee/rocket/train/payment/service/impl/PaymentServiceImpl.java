@@ -103,7 +103,11 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
         if (pay == null) {
             CastException.cast(ShopCode.PAYMENT_NOT_FOUND);
         }
-        pay.setIsPaid(ShopCode.PAYMENT_IS_PAID.getCode());
+        // 注意：这里写的是 DB 状态码（is_paid 列是 tinyint），必须用 ORDER_PAY_STATUS_IS_PAY(2)。
+        // 之前错用 PAYMENT_IS_PAID(70002)，那是 API 响应码（供 CastException 抛业务异常用），
+        // 70002 超出 tinyint 范围，导致 MySQL 报 "Data truncation: Out of range value for column 'is_paid'"。
+        // 状态码与响应码不要混用：true 开头的 ShopCode 才是写进 DB 的状态值。
+        pay.setIsPaid(ShopCode.ORDER_PAY_STATUS_IS_PAY.getCode());
         boolean updateResult = updateById(pay);
         if (!updateResult) {
             log.info("订单支付状态修改(->已支付)失败, 更新支付订单状态, payId: {}, 业务ID: {}",
