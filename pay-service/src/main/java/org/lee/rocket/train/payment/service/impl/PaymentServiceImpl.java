@@ -12,9 +12,11 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.lee.rocket.train.api.IMqMessageProducerService;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
+import org.lee.rocket.train.common.constant.status.PayStatus;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
+import org.lee.rocket.train.common.statemachine.StatusTransition;
 import org.lee.rocket.train.payment.mapper.OrderPaymentMapper;
 import org.lee.rocket.train.service.entity.MqMessageProducer;
 import org.lee.rocket.train.service.entity.Payment;
@@ -64,25 +66,29 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
     @Override
     public Result<?> createPayment(Payment payment) {
         if (payment == null || payment.getOrderId() == null) {
-            CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
+            CastException.cast(ResultCode.REQUEST_PARAMETER_VALID);
         }
-        // 判断订单支付状态
+        // 判断是否已存在已支付的记录
+        // 【修复】原用 ShopCode.PAYMENT_IS_PAID(70002 响应码) 查 is_paid 列，库里存的是 0/1/2，永远查不到；
+        //        改用 PayStatus.PAID(2 状态码)，类型安全且语义正确
         @SuppressWarnings("null")
         Long count = lambdaQuery()
                 .eq(Payment::getOrderId, payment.getOrderId())
-                .eq(Payment::getIsPaid, ShopCode.PAYMENT_IS_PAID.getCode())
+                .eq(Payment::getIsPaid, PayStatus.PAID.getCode())
                 .count();
         // 如果记录已经存在, 则抛出异常
         if (count > 0) {
-            CastException.cast(ShopCode.PAYMENT_IS_PAID);
+            CastException.cast(ResultCode.PAYMENT_IS_PAID);
         }
-        // 设置订单状态为: 未支付
-        payment.setIsPaid(ShopCode.ORDER_PAY_STATUS_NO_PAY.getCode());
+        // 创建支付订单即发起支付，进入「支付中」状态
+        // 【说明】原设为 UNPAID(0)，但回调直接置 PAID(2) 会跳过 PAYING 中间态，触发 StatusTransition 校验失败；
+        //        按 PayStatus 流转链 UNPAID→PAYING→PAID，创建支付时即进入 PAYING，回调时 PAYING→PAID 合法
+        payment.setIsPaid(PayStatus.PAYING.getCode());
         // 保存支付订单
         payment.setPayId(idWorker.nextId(null));
         save(payment);
 
-        return Result.success(ShopCode.SUCCESS);
+        return Result.success();
     }
 
     /**
@@ -93,26 +99,36 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
     @SuppressWarnings("null")
     @Override
     public Result<?> callbackPayment(Payment payment) {
-        // 判断用户支付状态
-        if (!payment.getIsPaid().equals(ShopCode.ORDER_PAY_STATUS_IS_PAY.getCode())) {
-            CastException.cast(ShopCode.ORDER_PAY_STATUS_NO_PAY);
+        // 判断用户支付状态（回调入参须为已支付）
+        if (!payment.getIsPaid().equals(PayStatus.PAID.getCode())) {
+            // 【修复】原用 ORDER_PAY_STATUS_NO_PAY(状态码) 当响应码抛，改用 PAYMENT_NOT_PAID 响应码
+            CastException.cast(ResultCode.PAYMENT_NOT_PAID);
         }
         // 更新支付订单状态: 已支付
         Payment pay = lambdaQuery().eq(Payment::getPayId, payment.getPayId()).one();
         // 判断支付订单是否存在
         if (pay == null) {
-            CastException.cast(ShopCode.PAYMENT_NOT_FOUND);
+            CastException.cast(ResultCode.PAYMENT_NOT_FOUND);
         }
-        // 注意：这里写的是 DB 状态码（is_paid 列是 tinyint），必须用 ORDER_PAY_STATUS_IS_PAY(2)。
-        // 之前错用 PAYMENT_IS_PAID(70002)，那是 API 响应码（供 CastException 抛业务异常用），
-        // 70002 超出 tinyint 范围，导致 MySQL 报 "Data truncation: Out of range value for column 'is_paid'"。
-        // 状态码与响应码不要混用：true 开头的 ShopCode 才是写进 DB 的状态值。
-        pay.setIsPaid(ShopCode.ORDER_PAY_STATUS_IS_PAY.getCode());
+        // 状态机校验：PAYING → PAID（非法流转直接抛异常，避免脏数据）
+        PayStatus from = PayStatus.of(pay.getIsPaid());
+        try {
+            StatusTransition.check(from, PayStatus.PAID);
+        } catch (IllegalStateException e) {
+            // 【修复】重复回调（支付网关重试）时已是 PAID，原直接抛 IllegalStateException 导致 500；
+            //        改为幂等返回"已支付"，避免支付网关重试被当作失败重发通知。
+            if (from == PayStatus.PAID) {
+                log.info("重复支付回调, 支付订单已支付, payId: {}, 业务ID: {}", payment.getPayId(), payment.getOrderId());
+                return Result.fail(ResultCode.PAYMENT_IS_PAID);
+            }
+            throw e; // 其他非法流转仍是编程错误，向上抛由全局异常处理器兜底
+        }
+        pay.setIsPaid(PayStatus.PAID.getCode());
         boolean updateResult = updateById(pay);
         if (!updateResult) {
             log.info("订单支付状态修改(->已支付)失败, 更新支付订单状态, payId: {}, 业务ID: {}",
                     payment.getPayId(), payment.getOrderId());
-            CastException.cast(ShopCode.PAYMENT_FAILURE);
+            CastException.cast(ResultCode.PAYMENT_FAILURE);
         }
         log.info("订单支付状态修改(->已支付)成功, 更新支付订单状态, payId: {}, 业务ID: {}",
                 payment.getPayId(), payment.getOrderId());
@@ -148,10 +164,10 @@ public class PaymentServiceImpl extends ServiceImpl<OrderPaymentMapper, Payment>
      */
     private void sendMqMessageAsync(String tag, String key, String body, MqMessageProducer mqMessageProducer) {
         if (StringUtils.isEmpty(topic)) {
-            CastException.cast(ShopCode.MQ_TOPIC_IS_EMPTY);
+            CastException.cast(ResultCode.MQ_TOPIC_IS_EMPTY);
         }
         if (StringUtils.isEmpty(body)) {
-            CastException.cast(ShopCode.MQ_MESSAGE_BODY_IS_EMPTY);
+            CastException.cast(ResultCode.MQ_MESSAGE_BODY_IS_EMPTY);
         }
 
         Message message = new Message(topic, tag, key, body.getBytes());

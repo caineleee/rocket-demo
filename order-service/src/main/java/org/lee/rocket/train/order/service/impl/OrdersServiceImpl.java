@@ -1,10 +1,10 @@
 package org.lee.rocket.train.order.service.impl;
 
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.incrementer.DefaultIdentifierGenerator;
 import jakarta.annotation.Resource;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.rocketmq.client.exception.MQBrokerException;
@@ -12,9 +12,14 @@ import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
+import org.lee.rocket.train.common.constant.status.CouponStatus;
+import org.lee.rocket.train.common.constant.status.OrderStatus;
+import org.lee.rocket.train.common.constant.status.PayStatus;
+import org.lee.rocket.train.common.constant.status.UserMoneyLogType;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
+import org.lee.rocket.train.common.statemachine.StatusTransition;
 import org.lee.rocket.train.order.mapper.OrderMapper;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -41,8 +46,8 @@ import java.time.LocalDateTime;
  * @author CodeGenerator
  * @since 2026-06-03
  */
-@Log4j2
 @DubboService(interfaceClass = IOrdersService.class)
+@Slf4j
 public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrdersService {
 
     @DubboReference(version = "1.0.0", group = "default")
@@ -88,7 +93,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             // 确认订单
             updateOrderStatus(order);
             // 返回成功状态
-            return Result.success(ShopCode.SUCCESS);
+            return Result.success();
         } catch (Exception e) {
             // 确认订单失败,发送消息
             // 订单ID 优惠券ID 用户ID 用户余额 商品ID 商品数量
@@ -106,15 +111,16 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
                 log.error("订单确认失败, RocketMQ 回退失败 --- 订单: {} 优惠券: {} 用户: {} 用户余额: {} 商品: {} 商品数量: {}",
                         order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
                         order.getGoodsId(), order.getGoodsNumber());
-                log.error(ex);
-                return new Result<>(ShopCode.MQ_MESSAGE_STATUS_FAIL);
+                log.error("RocketMQ 回退消息发送异常", ex);
+                // MQ 消息状态码（写库用）不能当响应码返回，改用 MQ_SEND_MESSAGE_FAIL 响应码
+                return Result.fail(ResultCode.MQ_SEND_MESSAGE_FAIL);
             }
             // 订单回退消息发送成功
             log.error("订单确认失败,mq 回退--- 订单: {} 优惠券: {} 用户: {} 用户余额: {} 商品: {} 商品数量: {}",
                     order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
                     order.getGoodsId(), order.getGoodsNumber());
             // 返回失败状态
-            return new Result<>(ShopCode.ORDER_CONFIRM_FAIL);
+            return Result.fail(ResultCode.ORDER_CONFIRM_FAIL);
         }
     }
 
@@ -136,17 +142,19 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
      * @param order 订单信息
      */
     private void updateOrderStatus(Order order) {
-        // 变更订单状态  预订单 -> 订单
-        order.setOrderStatus(ShopCode.ORDER_CONFIRM.getCode());
+        // 变更订单状态  预订单 -> 订单（状态机校验：NO_CONFIRM → CONFIRMED，非法流转直接抛异常）
+        OrderStatus from = OrderStatus.of(order.getOrderStatus());
+        StatusTransition.check(from, OrderStatus.CONFIRMED);
+        order.setOrderStatus(OrderStatus.CONFIRMED.getCode());
         // 变更支付状态
-        order.setPayStatus(ShopCode.ORDER_PAY_STATUS_NO_PAY.getCode());
+        order.setPayStatus(PayStatus.UNPAID.getCode());
         order.setConfirmTime(LocalDateTime.now());
 
         // 直接更新订单状态(预订单已存在,无需先查询)
         boolean updateResult = updateById(order);
         if (!updateResult) {
             log.error("订单: {} 确认订单失败,订单不存在或已被修改", order.getOrderId());
-            CastException.cast(ShopCode.ORDER_CONFIRM_FAIL);
+            CastException.cast(ResultCode.ORDER_CONFIRM_FAIL);
         }
         
         log.info("订单: {} 确认成功", order.getOrderId());
@@ -161,16 +169,17 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
                 && order.getMoneyPaid().compareTo(0L) > 0) {
             UserMoneyLog userMoneyLog = new UserMoneyLog();
             userMoneyLog.setUserId(order.getUserId());
-            userMoneyLog.setMoneyLogType(ShopCode.USER_MONEY_PAID.getCode());
+            userMoneyLog.setMoneyLogType(UserMoneyLogType.PAID.getCode());
             userMoneyLog.setUseMoney(order.getMoneyPaid());
             userMoneyLog.setOrderId(order.getOrderId());
 
             Result<?> result = userService.updateMoneyPaid(userMoneyLog);
-            if (result.getSuccess().equals(ShopCode.SUCCESS.getSuccess())) {
-                log.info("订单: " + order.getOrderId() + " 用户: " + order.getUserId() + " 扣减余额成功");
+            // 【修复】原用 ShopCode.SUCCESS.getSuccess() 拿布尔字段判断，语义双关；改用标准布尔判断
+            if (Boolean.TRUE.equals(result.getSuccess())) {
+                log.info("订单: {} 用户: {} 扣减余额成功", order.getOrderId(), order.getUserId());
             } else {
-                log.error("订单: " + order.getOrderId() + " 用户: " + order.getUserId() + " 扣减余额失败");
-                CastException.cast(ShopCode.USER_MONEY_REDUCE_FAIL);
+                log.error("订单: {} 用户: {} 扣减余额失败", order.getOrderId(), order.getUserId());
+                CastException.cast(ResultCode.USER_MONEY_REDUCE_FAIL);
             }
         }
     }
@@ -186,15 +195,16 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         Coupon coupon = couponService.getById(order.getCouponId());
         if (coupon != null) {
             coupon.setOrderId(order.getOrderId());
-            coupon.setIsUsed(ShopCode.COUPON_ISUSED.getSuccess());
+            // 【修复】原用 ShopCode.COUPON_ISUSED.getSuccess() 拿布尔 true 当状态值，语义双关；改用 CouponStatus 状态码
+            coupon.setIsUsed(CouponStatus.USED.getCode() == 1);
             coupon.setUsedTime(LocalDateTime.now());
 
             Result<?> result = couponService.reduceCoupon(coupon);
             if (!result.getSuccess()) {
-                log.error("订单: " + order.getOrderId() +  " 扣减优惠券: " + coupon.getCouponId() +" 失败");
-                CastException.cast(ShopCode.COUPON_USE_FAIL);
+                log.error("订单: {} 扣减优惠券: {} 失败", order.getOrderId(), coupon.getCouponId());
+                CastException.cast(ResultCode.COUPON_USE_FAIL);
             } else {
-                log.info("订单: " + order.getOrderId() +  " 扣减优惠券: " + coupon.getCouponId() +" 成功");
+                log.info("订单: {} 扣减优惠券: {} 成功", order.getOrderId(), coupon.getCouponId());
             }
         }
     }
@@ -211,12 +221,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         goodsStocksLog.setGoodsNumber(order.getGoodsNumber());
         Result<?> result = goodsService.reduceStock(goodsStocksLog);
         if (result != null) {
-            log.info("订单: " + order.getOrderId() +  " 扣减库存成功");
+            log.info("订单: {} 扣减库存成功", order.getOrderId());
         }
-//        if (result.getCode().equals(ShopCode.SUCCESS.getCode())){
+//        if (result.getCode().equals(String.valueOf(ResultCode.SUCCESS.getCode()))){
 //        } else {
 //            log.error("订单: " + order.getOrderId() +  " 扣减库存失败");
-//            CastException.cast(ShopCode.REDUCE_GOODS_NUM_FAIL);
+//            CastException.cast(ResultCode.REDUCE_GOODS_NUM_FAIL);
 //        }
 
     }
@@ -229,21 +239,23 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
     @SuppressWarnings("null")
     private Long savePreOrder(Order order) {
         // 设置订单状态:0未确认 (用户不可见)
-        order.setOrderStatus(ShopCode.ORDER_NO_CONFIRM.getCode());
+        order.setOrderStatus(OrderStatus.NO_CONFIRM.getCode());
 
         // 设置订单ID
         Long orderId = idWorker.nextId(null);
         order.setOrderId(orderId);
         // 核算运费(假设机制为: 商品价格 >= 100 不收费, 小于100收费10元)
         Long freight = calculateFreight(order.getGoodsPrice());
-        if (freight.equals(order.getShippingFee()) && order.getGoodsPrice().equals(100L)) {
-            CastException.cast(ShopCode.ORDER_SHIPPINGFEE_INVALID);
+        // 【修复】原逻辑异常：运费相等且价格=100 时反而抛异常（即"免邮订单反而被拒"），
+        // 且价格≠100 时完全不校验运费。改为标准校验：计算运费 ≠ 订单运费（或未传运费）即抛异常。
+        if (order.getShippingFee() == null || !freight.equals(order.getShippingFee())) {
+            CastException.cast(ResultCode.ORDER_SHIPPINGFEE_INVALID);
         }
         // 核算订单总金额
         Long orderAmount = order.getGoodsPrice() * order.getGoodsNumber();
         orderAmount = orderAmount + freight;
         if (orderAmount.compareTo(order.getOrderAmount()) != 0) {
-            CastException.cast(ShopCode.ORDERAMOUNT_INVALID);
+            CastException.cast(ResultCode.ORDERAMOUNT_INVALID);
         }
         // 判断用户是否使用余额
         Long moneyPaid = order.getMoneyPaid();
@@ -251,12 +263,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             // 判断用户是否小于0
             int i = moneyPaid.compareTo(0L);
             if (i < 0 || i == 0) {
-                CastException.cast(ShopCode.MONEY_PAID_LESS_ZERO);
+                CastException.cast(ResultCode.MONEY_PAID_LESS_ZERO);
             }
             if (i > 0) {
                 User user = userService.findById(order.getUserId());
                 if (user.getUserMoney() < moneyPaid) {
-                    CastException.cast(ShopCode.MONEY_PAID_INVALID); // 余额不足
+                    CastException.cast(ResultCode.MONEY_PAID_INVALID); // 余额不足
                 }
             }
         } else {
@@ -270,11 +282,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             Coupon coupon = couponService.getById(couponId);
             // 判断优惠券是否存在
             if (coupon == null) {
-                CastException.cast(ShopCode.COUPON_NO_EXIST);
+                CastException.cast(ResultCode.COUPON_NO_EXIST);
             }
             // 优惠券是否使用
             if (coupon.getIsUsed()) {
-                CastException.cast(ShopCode.COUPON_ISUSED);
+                // 【修复】原用 ShopCode.COUPON_ISUSED(状态码) 当响应码抛，改用 COUPON_ALREADY_USED 响应码
+                CastException.cast(ResultCode.COUPON_ALREADY_USED);
             }
             order.setCouponPaid(coupon.getCouponPrice());
         } else {
@@ -318,30 +331,31 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         //1.校验订单是否存在
         if (order == null) {
             //订单不存在
-            CastException.cast(ShopCode.ORDER_INVALID);
+            CastException.cast(ResultCode.ORDER_INVALID);
         }
         //2.校验订单中的商品是否存在
         Goods goods = goodsService.findById(order.getGoodsId());
         if (goods == null) {
             //商品不存在
-            CastException.cast(ShopCode.GOODS_NO_EXIST);
+            CastException.cast(ResultCode.GOODS_NO_EXIST);
         }
         //3.校验下单用户是否存在
         User user = userService.findById(order.getUserId());
         if (user == null) {
             //用户不存在
-            CastException.cast(ShopCode.USER_NO_EXIST);
+            CastException.cast(ResultCode.USER_NO_EXIST);
         }
         //4.校验订单金额是否合法
+        // 【修复】原逻辑写反：客户端价 == 数据库价时反而抛异常，应改为 != 时抛异常
         if (order.getGoodsPrice() == null
                 || goods.getGoodsPrice() == null
-                || order.getGoodsPrice().equals(goods.getGoodsPrice())) {
-            CastException.cast(ShopCode.GOODS_PRICE_INVALID);
+                || !order.getGoodsPrice().equals(goods.getGoodsPrice())) {
+            CastException.cast(ResultCode.GOODS_PRICE_INVALID);
         }
 
         //5.校验订单商品数量是否合法
         if (goods.getGoodsNumber() < order.getGoodsNumber()) {
-            CastException.cast(ShopCode.GOODS_NUM_NOT_ENOUGH);
+            CastException.cast(ResultCode.GOODS_NUM_NOT_ENOUGH);
         }
 
         log.info("订单信息校验通过");

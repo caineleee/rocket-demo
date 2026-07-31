@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lee.rocket.train.common.annotation.*;
 import org.lee.rocket.train.common.constant.RedisAopConstants;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
 import org.lee.rocket.train.common.exception.CustomerException;
 import org.lee.rocket.train.common.service.RedisOperationService;
 import org.lee.rocket.train.common.spel.SpelSecurityFilter;
@@ -86,7 +86,7 @@ public class RedisAspect {
             if (redisLock.failStrategy() == FailStrategy.FAIL_FAST) {
                 // FAIL_FAST：直接抛异常，阻止方法执行
                 log.warn("分布式锁获取失败（FAIL_FAST）: key={}", key);
-                throw new CustomerException(ShopCode.REDIS_LOCK_ACQUIRE_FAIL);
+                throw new CustomerException(ResultCode.REDIS_LOCK_ACQUIRE_FAIL);
             } else {
                 // FAIL_SAFE：记录日志，降级执行（不推荐，失去锁的意义）
                 log.warn("分布式锁获取失败（FAIL_SAFE 降级执行）: key={}", key);
@@ -140,7 +140,7 @@ public class RedisAspect {
         if (currentValue > redisIncr.maxCount()) {
             log.warn("计数器超过上限: key={}, value={}, maxCount={}", key, currentValue, redisIncr.maxCount());
             if (redisIncr.failStrategy() == FailStrategy.FAIL_FAST) {
-                throw new CustomerException(ShopCode.REDIS_INCR_EXCEED_MAX);
+                throw new CustomerException(ResultCode.REDIS_INCR_EXCEED_MAX);
             }
             // FAIL_SAFE：记录日志，继续执行
         }
@@ -149,7 +149,7 @@ public class RedisAspect {
         if (currentValue < redisIncr.minCount()) {
             log.warn("计数器低于下限: key={}, value={}, minCount={}", key, currentValue, redisIncr.minCount());
             if (redisIncr.failStrategy() == FailStrategy.FAIL_FAST) {
-                throw new CustomerException(ShopCode.REDIS_INCR_BELOW_MIN);
+                throw new CustomerException(ResultCode.REDIS_INCR_BELOW_MIN);
             }
             // FAIL_SAFE：记录日志，继续执行
         }
@@ -194,7 +194,7 @@ public class RedisAspect {
             if (redisGet.failStrategy() == FailStrategy.FAIL_FAST) {
                 // FAIL_FAST：直接抛异常，阻止方法执行
                 log.warn("RedisGet 缓存未命中（FAIL_FAST）: key={}", key);
-                throw new CustomerException(ShopCode.REDIS_GET_MISS_FAST_FAIL);
+                throw new CustomerException(ResultCode.REDIS_GET_MISS_FAST_FAIL);
             }
             // DB_ONLY 或 FAIL_SAFE：注入 null，方法继续执行
             log.debug("RedisGet 缓存未命中（注入 null）: key={}", key);
@@ -419,7 +419,7 @@ public class RedisAspect {
             return parser.parseExpression(expression).getValue(context);
         } catch (Exception e) {
             log.error("SpEL 表达式解析失败（含 #result）: expression={}", expression, e);
-            throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+            throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
         }
     }
 

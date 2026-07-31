@@ -1,7 +1,7 @@
 package org.lee.rocket.train.common.spel;
 
 import lombok.extern.slf4j.Slf4j;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
 import org.lee.rocket.train.common.exception.CustomerException;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -118,7 +118,7 @@ public class SpelSecurityFilter {
         } catch (Exception e) {
             String methodName = method != null ? method.getName() : "unknown";
             log.error("SpEL 表达式解析失败: expression={}, method={}", expression, methodName, e);
-            throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+            throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
         }
     }
 
@@ -140,7 +140,7 @@ public class SpelSecurityFilter {
         for (String blacklisted : SPEL_BLACKLIST) {
             if (expression.contains(blacklisted)) {
                 log.warn("SpEL 表达式包含危险调用: expression={}, blacklisted={}", expression, blacklisted);
-                throw new CustomerException(ShopCode.REDIS_SPEL_SECURITY_VIOLATION);
+                throw new CustomerException(ResultCode.REDIS_SPEL_SECURITY_VIOLATION);
             }
         }
     }

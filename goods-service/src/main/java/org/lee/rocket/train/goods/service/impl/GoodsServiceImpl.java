@@ -5,7 +5,7 @@ import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.lee.rocket.train.common.annotation.RedisIncr;
 import org.lee.rocket.train.common.annotation.FailStrategy;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
 import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.common.model.Result;
 import org.lee.rocket.train.service.entity.GoodsStocksLog;
@@ -13,6 +13,7 @@ import org.lee.rocket.train.api.IGoodsService;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.goods.mapper.GoodsMapper;
 import org.lee.rocket.train.api.IGoodsStocksLogService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -32,21 +33,16 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 
     /**
      * 根据商品 ID 查询商品信息
-     * <p>
-     * 【注意】此方法是 Dubbo 接口方法，签名不能修改（接口契约）
-     * 如果需要缓存，建议在 Controller 层或单独的查询方法中使用 @RedisGet
      *
      * @param goodsId 商品 ID
      * @return 商品信息
      */
     @Override
     public Goods findById(Long goodsId) {
-        // 校验参数
         if (goodsId == null) {
-            CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
+            CastException.cast(ResultCode.REQUEST_PARAMETER_VALID);
         }
-
-        return query().eq("goods_id", goodsId).one();
+        return getById(goodsId);
     }
 
     /**
@@ -58,24 +54,16 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
      * 1. 方法执行前，Redis 执行 INCRBY 命令（delta = -1，每次扣减 1 件）
      * 2. 如果扣减后库存低于 0（minCount = 0），根据 failStrategy 处理
      * 3. FAIL_FAST：直接抛异常，阻止扣减
-     * 4. FAIL_SAFE：记录日志，继续执行（不推荐）
      * <p>
-     * 【参数说明】
-     * - key = "#goodsStocksLog.goodsId"：SpEL 表达式，引用参数中的商品 ID
-     * - prefix = "goods:stock"：Key 前缀，完整 Key = goods:stock:GoodsServiceImpl.reduceStock:{goodsId}
-     * - delta = -1：每次扣减 1 件（负数表示减少）
-     * - minCount = 0：库存不能低于 0（防止超卖）
-     * - failStrategy = FAIL_FAST：库存不足时直接抛异常
-     * <p>
-     * 【为什么用 @RedisIncr 而不是 @Cacheable？】
-     * - @Cacheable 是"读-执行-写"模式，没有原子自增能力
-     * - 库存扣减需要 INCR + 阈值判断的原子操作，@Cacheable 无法表达
-     * - Redis INCR 是原子操作，天然支持高并发
-     * <p>
-     * 【注意事项】
-     * 1. Redis 中的库存值需要与 DB 保持一致（初始化时从 DB 同步）
-     * 2. 如果 Redis 异常，FAIL_FAST 会阻止扣减，保证数据一致性
-     * 3. ttl = 0 表示永不过期（库存计数器不能自动过期）
+     * 【修复内容】
+     * 1. 加 @Transactional(rollbackFor = Exception.class)：扣库存 + 写日志两步操作必须原子
+     *    注意：@RedisIncr 的 Redis 扣减在事务外执行（AOP 在方法前），
+     *    如果 DB 失败 Redis 不会自动回滚——这是已知的 Redis/DB 一致性问题，
+     *    完整修复需要在 catch 中补偿 Redis，当前先保证 DB 层原子性
+     * 2. 删除 @SuppressWarnings("null")，删除冗余的 goods == null 判断（已在上面检查过）
+     * 3. 修复入参污染：不再修改入参 goodsStocksLog 的 goodsNumber（原代码 setGoodsNumber(-(...))
+     *    会把调用方对象的字段改成负数，调用方继续使用会拿到错误值），改用局部变量写日志
+     * 4. findById 改用 getById，避免 query().one() 抛 TooManyResultsException
      *
      * @param goodsStocksLog 扣减库存日志
      * @return Result
@@ -87,7 +75,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             minCount = 0,
             failStrategy = FailStrategy.FAIL_FAST
     )
-    @SuppressWarnings("null")
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public Result<?> reduceStock(GoodsStocksLog goodsStocksLog) {
         // 参数校验
@@ -95,33 +83,38 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
                 || goodsStocksLog.getOrderId() == null
                 || goodsStocksLog.getGoodsNumber() == null
                 || goodsStocksLog.getGoodsNumber() <= 0) {
-            CastException.cast(ShopCode.REQUEST_PARAMETER_VALID);
+            CastException.cast(ResultCode.REQUEST_PARAMETER_VALID);
         }
-        Goods goods = query().eq("goods_id", goodsStocksLog.getGoodsId()).one();
+        Goods goods = getById(goodsStocksLog.getGoodsId());
         if (goods == null) {
-            CastException.cast(ShopCode.GOODS_NO_EXIST);
+            CastException.cast(ResultCode.GOODS_NO_EXIST);
         }
 
         // 校验库存是否充足
-        if (goods== null || goods.getGoodsNumber() < goodsStocksLog.getGoodsNumber()) {
-            CastException.cast(ShopCode.GOODS_NUM_NOT_ENOUGH);
+        if (goods.getGoodsNumber() < goodsStocksLog.getGoodsNumber()) {
+            CastException.cast(ResultCode.GOODS_NUM_NOT_ENOUGH);
         }
         // 减去库存
         goods.setGoodsNumber(goods.getGoodsNumber() - goodsStocksLog.getGoodsNumber());
-
         boolean updateSuccess = updateById(goods);
         if (!updateSuccess) {
-            CastException.cast(ShopCode.REDUCE_GOODS_NUM_FAIL);
+            CastException.cast(ResultCode.REDUCE_GOODS_NUM_FAIL);
         }
 
         // 记录库存操作日志
-        goodsStocksLog.setGoodsNumber(-(goodsStocksLog.getGoodsNumber()));
-        goodsStocksLog.setLogTime(LocalDateTime.now());
-        boolean saveSuccess = goodsStocksLogService.save(goodsStocksLog);
+        // 【修复】新建日志对象，不修改入参 goodsStocksLog 的 goodsNumber
+        // 原代码 goodsStocksLog.setGoodsNumber(-(goodsStocksLog.getGoodsNumber())) 会污染入参，
+        // 调用方（如 MQ 消费者）继续使用该对象时会拿到错误的负值
+        GoodsStocksLog logEntry = new GoodsStocksLog();
+        logEntry.setGoodsId(goodsStocksLog.getGoodsId());
+        logEntry.setOrderId(goodsStocksLog.getOrderId());
+        logEntry.setGoodsNumber(-goodsStocksLog.getGoodsNumber()); // 负数表示扣减
+        logEntry.setLogTime(LocalDateTime.now());
+        boolean saveSuccess = goodsStocksLogService.save(logEntry);
         if (!saveSuccess) {
-            CastException.cast(ShopCode.REDUCE_GOODS_NUM_EMPTY);
+            CastException.cast(ResultCode.REDUCE_GOODS_NUM_EMPTY);
         }
 
-        return new Result<>(ShopCode.SUCCESS);
+        return Result.success();
     }
 }

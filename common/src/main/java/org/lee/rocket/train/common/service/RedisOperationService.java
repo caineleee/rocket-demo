@@ -6,7 +6,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.lee.rocket.train.common.constant.ShopCode;
+import org.lee.rocket.train.common.constant.code.ResultCode;
 import org.lee.rocket.train.common.exception.CustomerException;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -190,11 +190,11 @@ public class RedisOperationService {
         } catch (JsonProcessingException e) {
             log.error("JSON 序列化失败: key={}, value={}", key, value, e);
             errorCounter.increment();
-            throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+            throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
         } catch (Exception e) {
             log.error("Redis SET 操作失败: key={}", key, e);
             errorCounter.increment();
-            throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+            throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
         }
     }
 
@@ -308,7 +308,7 @@ public class RedisOperationService {
         try {
             Long result = redisTemplate.opsForValue().increment(key, delta);
             if (result == null) {
-                throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+                throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
             }
             // 如果是新创建的 Key（result == delta），设置过期时间
             if (ttl > 0 && result == delta) {
@@ -320,7 +320,7 @@ public class RedisOperationService {
         } catch (Exception e) {
             log.error("Redis INCRBY 操作失败: key={}, delta={}", key, delta, e);
             errorCounter.increment();
-            throw new CustomerException(ShopCode.REDIS_OPERATION_ERROR);
+            throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);
         }
     }
 
