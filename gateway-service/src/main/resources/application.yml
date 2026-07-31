@@ -92,5 +92,6 @@ server:
 logging:
   level:
     root: INFO
-    org.springframework.cloud.gateway: DEBUG
-    org.lee.rocket.train.gateway: DEBUG
+    # 日志级别统一交给 common 模块的 logback-spring.xml 管理（框架包 WARN、业务包 INFO、文件 totalSizeCap 200MB）
+    # 不要在此长期留 DEBUG——曾因 gateway 包开 DEBUG 导致 6 服务同跑时 stdout 撑爆磁盘 20GB。
+    # 如需临时调试网关路由，启动参数加：--logging.level.org.springframework.cloud.gateway=DEBUG，用完即撤。
