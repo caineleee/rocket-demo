@@ -1,154 +1,42 @@
 # ============================================================
-# goods-service 配置（由 application.properties 转换为 yaml 格式，功能不变）
+# goods-service 本地配置（公共部分已上移 Nacos 共享配置）
+# 注：goods 原本 dubbo.consumer 无 timeout/retries，现统一为 retries:0（更安全）
 # ============================================================
-
 spring:
-  # ----------------------------------------
-  # 应用名称
-  # ----------------------------------------
   application:
     name: goods-service
-
-  # ----------------------------------------
-  # 禁用 Spring Boot 自动导入配置源（配合 nacos.config.enabled=false 完全禁用 Nacos Config）
-  # 设为空字符串，与原 properties 中 spring.config.import= 行为一致
-  # ----------------------------------------
   config:
-    import: ""
-
-  # ----------------------------------------
-  # MySQL 数据库配置
-  # ----------------------------------------
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: 'jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:rocket-demo-db}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true'
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:root}
-
-  # ----------------------------------------
-  # Redis 配置
-  # ----------------------------------------
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-  # ----------------------------------------
-  # Docker Compose 自动管理（仅启动不停止）
-  # ----------------------------------------
-  docker:
-    compose:
-      lifecycle-management: start-only
-
-  # ----------------------------------------
-  # Spring Cloud 配置
-  # ----------------------------------------
+    import:
+      - optional:nacos:shared-spring-dev.yaml
+      - optional:nacos:shared-datasource-dev.yaml
+      - optional:nacos:shared-mybatis-dev.yaml
+      - optional:nacos:shared-dubbo-dev.yaml
+      - optional:nacos:shared-mq-dev.yaml
+      - optional:nacos:shared-idworker-dev.yaml
+      - optional:nacos:shared-sentinel-dev.yaml
   cloud:
-    # Nacos：禁用 Config + 启用 Discovery
-    # 【OpenFeign 示例】
-    # OpenFeign 需要配合 Nacos Discovery 使用，实现服务发现和负载均衡。
-    # goods-service 注册到 Nacos 后，其他服务才能通过服务名（goods-service）调用它。
-    # 注意：这里使用的是 Nacos Discovery（服务发现），不是 Nacos Config（配置管理）。
     nacos:
       config:
-        enabled: false
-      discovery:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        namespace: public
-    # Sentinel 限流熔断
+        namespace: rocket-demo
+      discovery:
+        namespace: rocket-demo
     sentinel:
       transport:
-        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
-        # 当前服务与 Dashboard 通信的端口
         port: 8722
-      eager: true
-      # 启用 HTTP 方法区分，让 Sentinel 区分同一 URL 路径的不同 HTTP 方法（GET/POST/PUT/DELETE）
-      http-method-specify: true
 
-# ========================================
-# 服务端口
-# ========================================
 server:
   port: 8082
 
-# ========================================
-# IdWorker 配置（分布式ID生成器）
-# ========================================
-id-worker:
-  worker-id: 1
-  datacenter-id: 1
-
-# ========================================
-# MyBatis-Plus 配置
-# ========================================
-mybatis-plus:
-  mapper-locations: 'classpath*:mapper/**/*.xml'
-  type-aliases-package: org.lee.rocket.train.service.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    # 用 Slf4jImpl 走 logback（受 logback-spring.xml 的 totalSizeCap 200MB 上限保护）；
-    # StdOutImpl 直写 stdout、绕过 logback 不受控，曾导致磁盘被撑爆。
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-
-# ========================================
-# Nacos 日志配置（禁用默认日志配置）
-# ========================================
-nacos:
-  logging:
-    default:
-      config:
-        enabled: false
-
-# ========================================
-# RocketMQ 配置
-# ========================================
-rocketmq:
-  name-server: ${ROCKETMQ_NAMESRV:localhost:9876}
-  producer:
-    group: goods-producer-group
-  # 订单确认失败回滚消费者组
-  consumer:
-    order-failure:
-      # 每个服务使用独立的 consumer group，避免 BROADCASTING 模式下 offset 文件冲突
-      group: goods-order-cancel-group
-
-# 订单失败主题（供 @Value("${mq.topics.order-failure}") 注入）
-mq:
-  topics:
-    order-failure: order-failure-topic
-
-# ========================================
-# Dubbo 配置
-# ========================================
 dubbo:
-  # Dubbo 应用名与 Spring Cloud 应用名分离，避免 Dubbo RPC 实例与 Spring Cloud HTTP 实例
-  # 在 Nacos 中注册到同一服务名下，导致 Gateway 的 LoadBalancer 随机选中 RPC 端口（返回 500）。
-  # Dubbo 消费方通过接口→应用映射自动发现新的应用名，无需额外配置。
   application:
     name: goods-service-dubbo
     qos-port: 22222
-  # Nacos（仅用作 Dubbo 注册中心，不用于配置管理）
-  registries:
-    nacos:
-      id: nacos
-      protocol: nacos
-      address: ${NACOS_SERVER_ADDR:localhost:8848}
-  # 禁用 Dubbo 配置中心和元数据中心（只使用注册中心功能）
-  config-center:
-    address: ""
-  metadata-report:
-    address: ""
-  provider:
-    register-mode: application
-    version: 1.0.0
-    group: default
+
+rocketmq:
+  producer:
+    group: goods-producer-group
+  # 每个服务独立 consumer group，避免 BROADCASTING 模式下 offset 文件冲突
   consumer:
-    # 禁用 Dubbo 启动时服务检查（开发环境使用，避免依赖服务未启动导致失败）
-    check: false
-  protocol:
-    name: dubbo
-    port: -1
-  # Dubbo 序列化安全（开发环境禁用严格模式，避免白名单配置麻烦）
-  security:
-    serialize:
-      check: false
+    order-failure:
+      group: goods-order-cancel-group

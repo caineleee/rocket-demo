@@ -311,12 +311,15 @@ services:
     environment:
       - TZ=Asia/Shanghai
       # ========================================
-      # Nacos 持久化配置（暂时注释，用于学习理解）
+      # Nacos 持久化配置
       # ========================================
-      # 启用 Nacos 数据源持久化后，规则会保存到 Nacos，重启不丢失
-      # - SENTINEL_DATASOURCE_NACOS_SERVERADDR=nacos:8848
-      # - SENTINEL_DATASOURCE_NACOS_NAMESPACE=public
-      # - SENTINEL_DATASOURCE_NACOS_GROUP=SENTINEL_GROUP
+      # 启用 Nacos 数据源持久化后，限流规则保存到 Nacos，Dashboard 重启不丢失
+      # server-addr 用 Docker 服务名 nacos:8848（compose 网络内通信）
+      # namespace 与应用侧 shared-sentinel-dev.yaml 保持一致：rocket-demo
+      # group 与应用侧一致：DEFAULT_GROUP（应用侧用 ${spring.application.name}-rules 作为 dataId）
+      - SENTINEL_DATASOURCE_NACOS_SERVERADDR=nacos:8848
+      - SENTINEL_DATASOURCE_NACOS_NAMESPACE=rocket-demo
+      - SENTINEL_DATASOURCE_NACOS_GROUP=DEFAULT_GROUP
     volumes:
       # 日志持久化（可选）
       - sentinel-logs:/root/logs/csp
