@@ -8,8 +8,8 @@ import org.lee.rocket.train.api.IGoodsService;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Redis AOP 注解使用示例 Controller
@@ -37,8 +37,12 @@ public class RedisAopDemoController {
 
     /**
      * 模拟商品缓存（实际项目中应该从 DB 查询）
+     *
+     * 【为什么用 ConcurrentHashMap？】
+     * Demo 接口可能被并发调用，HashMap 非线程安全，多线程 put 会导致数据丢失或死循环（JDK7 链表成环）。
+     * 改用 ConcurrentHashMap 保证并发写安全。
      */
-    private final Map<Long, Goods> mockGoodsDb = new HashMap<>();
+    private final Map<Long, Goods> mockGoodsDb = new ConcurrentHashMap<>();
 
     // ==================== @RedisGet 使用示例 ====================
 

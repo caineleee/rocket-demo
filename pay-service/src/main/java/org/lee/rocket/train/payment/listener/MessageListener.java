@@ -18,8 +18,7 @@ public class MessageListener implements RocketMQListener<String> {
 
     @Override
     public void onMessage(String message) {
+        // 收到消息后在此处理业务逻辑（当前为 Demo：仅打印日志）
         log.info("收到消息: {}", message);
-        // 在这里处理接收到的消息
-        System.out.println("处理消息: " + message);
     }
 }
