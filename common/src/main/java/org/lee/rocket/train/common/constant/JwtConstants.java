@@ -2,36 +2,16 @@ package org.lee.rocket.train.common.constant;
 
 /**
  * JWT 认证常量配置类
- * 集中管理 JWT 相关的常量定义，便于统一维护和修改
+ * 集中管理 JWT 相关的结构性常量定义（前缀、Header 名、Payload key、Redis key 前缀等）。
+ *
+ * 【注意】密钥与过期时间属于"敏感/可变配置"，已从本类移除并外部化到环境变量（见 .env 的
+ * JWT_SECRET / JWT_ACCESS_EXPIRE / JWT_REFRESH_EXPIRE），由 JwtUtil 读取。
+ * 这里只保留不会随环境变化的结构性常量。
  */
 public class JwtConstants {
 
     private JwtConstants() {
     }
-
-    /**
-     * JWT 签名密钥
-     * 生产环境应从配置文件或密钥管理服务中获取，此处为演示使用硬编码
-     *
-     * 【长度要求】HMAC-SHA256 算法要求密钥长度 >= 32 字节（256 位），否则 jjwt 在
-     * Keys.hmacShaKeyFor() 阶段抛出 WeakKeyException，导致 JwtUtil 静态初始化失败
-     * （ExceptionInInitializerError），登录等所有 Token 生成接口直接 500。
-     * 此前 "rocket-demo-jwt-secret-key-2026" 仅 31 字节（248 位），差 1 字节触发该异常，
-     * 已补齐至 38 字节（304 位）。
-     */
-    public static final String SECRET_KEY = "rocket-demo-jwt-secret-key-2026-secure";
-
-    /**
-     * Access Token 过期时间（毫秒）
-     * 默认 30 分钟：30 * 60 * 1000 = 1800000
-     */
-    public static final long ACCESS_TOKEN_EXPIRE_TIME = 1800000L;
-
-    /**
-     * Refresh Token 过期时间（毫秒）
-     * 默认 7 天：7 * 24 * 60 * 60 * 1000 = 604800000
-     */
-    public static final long REFRESH_TOKEN_EXPIRE_TIME = 604800000L;
 
     /**
      * Token 前缀（Authorization Header 中使用）

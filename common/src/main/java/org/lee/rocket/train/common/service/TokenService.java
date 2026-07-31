@@ -52,9 +52,9 @@ public class TokenService {
      * @param refreshToken Refresh Token（UUID）
      */
     public void saveRefreshToken(Long userId, String refreshToken) {
-        // Key: refresh:{refreshToken}, Value: userId, Expire: 7天
+        // Key: refresh:{refreshToken}, Value: userId, Expire: 默认 7 天（由 JWT_REFRESH_EXPIRE 环境变量控制）
         String key = JwtConstants.REDIS_REFRESH_PREFIX + refreshToken;
-        redisTemplate.opsForValue().set(key, String.valueOf(userId), JwtConstants.REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(key, String.valueOf(userId), JwtUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
     }
 
     /**

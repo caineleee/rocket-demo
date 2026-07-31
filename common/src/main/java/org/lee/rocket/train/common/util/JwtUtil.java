@@ -13,16 +13,92 @@ import java.util.Map;
 /**
  * JWT 工具类
  * 提供 JWT Token 的生成、解析、验证等功能
+ *
+ * 【密钥外部化说明】
+ * 密钥、Access/Refresh Token 过期时间均从环境变量读取（见 .env 的 JWT_SECRET / JWT_ACCESS_EXPIRE /
+ * JWT_REFRESH_EXPIRE），不再硬编码到 Java 源码中，可在不重新编译的情况下调整。
+ *
+ * 【为什么读环境变量而不是 @Value 注入？】
+ * JwtUtil 是纯静态工具类，被 Gateway（WebFlux）和各业务服务共用。Gateway 的启动类在
+ * org.lee.rocket.train.gateway 包下，默认只扫描该包及其子包，不会扫描 common 包，因此
+ * common 里的 @Configuration / @Component 不会在 Gateway 中被实例化。如果 JwtUtil 改成依赖
+ * Spring Bean 注入密钥，Gateway 里 JwtUtil 会因未被配置而 SECRET_KEY 为 null，认证全线 500。
+ * 改用 System.getenv() 读取环境变量，零 Spring 依赖，Gateway 与所有服务都通用。
+ * application.yml 里也保留了 jwt.secret 等配置项（${JWT_SECRET:...}）便于查阅，二者读取同一环境变量。
  */
 public class JwtUtil {
 
     /**
-     * 使用 HMAC-SHA256 算法生成签名密钥
-     * 密钥来源：JwtConstants.SECRET_KEY
+     * JWT 签名密钥（原始字符串，从环境变量 JWT_SECRET 读取）
+     *
+     * 【长度要求】HMAC-SHA256 算法要求密钥长度 >= 32 字节（256 位），否则 jjwt 在
+     * Keys.hmacShaKeyFor() 阶段抛出 WeakKeyException，导致 JwtUtil 静态初始化失败
+     * （ExceptionInInitializerError），登录等所有 Token 生成接口直接 500。
+     * 此前 "rocket-demo-jwt-secret-key-2026" 仅 31 字节（248 位），差 1 字节触发该异常，
+     * 已补齐至 38 字节（304 位）。
+     *
+     * 【兜底值】未设置 JWT_SECRET 环境变量时使用开发兜底值；生产环境必须通过 .env / 启动参数
+     * 设置 JWT_SECRET 覆盖此值，避免密钥泄露。
      */
-    private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(JwtConstants.SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    private static final String SECRET_KEY_RAW = System.getenv("JWT_SECRET") != null
+            ? System.getenv("JWT_SECRET")
+            : "rocket-demo-jwt-secret-key-2026-secure";
+
+    /**
+     * 使用 HMAC-SHA256 算法生成签名密钥
+     * 密钥来源：环境变量 JWT_SECRET
+     */
+    private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_RAW.getBytes(StandardCharsets.UTF_8));
+
+    /**
+     * Access Token 过期时间（毫秒），从环境变量 JWT_ACCESS_EXPIRE 读取，默认 30 分钟
+     */
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = parseLongEnv("JWT_ACCESS_EXPIRE", 1800000L);
+
+    /**
+     * Refresh Token 过期时间（毫秒），从环境变量 JWT_REFRESH_EXPIRE 读取，默认 7 天
+     */
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = parseLongEnv("JWT_REFRESH_EXPIRE", 604800000L);
 
     private JwtUtil() {
+    }
+
+    /**
+     * 解析 long 类型环境变量，解析失败或未设置时返回默认值
+     *
+     * @param envName      环境变量名
+     * @param defaultValue 默认值
+     * @return 解析后的 long 值
+     */
+    private static long parseLongEnv(String envName, long defaultValue) {
+        String value = System.getenv(envName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            // 环境变量格式非法时回退默认值，避免启动失败
+            return defaultValue;
+        }
+    }
+
+    /**
+     * 获取 Access Token 过期时间（毫秒）
+     *
+     * @return Access Token 过期时间
+     */
+    public static long getAccessTokenExpireTime() {
+        return ACCESS_TOKEN_EXPIRE_TIME;
+    }
+
+    /**
+     * 获取 Refresh Token 过期时间（毫秒）
+     *
+     * @return Refresh Token 过期时间
+     */
+    public static long getRefreshTokenExpireTime() {
+        return REFRESH_TOKEN_EXPIRE_TIME;
     }
 
     /**
@@ -36,12 +112,12 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtConstants.USER_ID_KEY, userId);
         claims.put(JwtConstants.USER_NAME_KEY, userName);
-        
+
         return Jwts.builder()
                 .claims(claims)                    // 设置 Payload 中的自定义数据
                 .subject(String.valueOf(userId))   // 设置 subject（通常为用户 ID）
                 .issuedAt(new Date())              // 设置签发时间
-                .expiration(new Date(System.currentTimeMillis() + JwtConstants.ACCESS_TOKEN_EXPIRE_TIME))  // 设置过期时间（2小时）
+                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_TIME))  // 设置过期时间（默认 30 分钟）
                 .signWith(SECRET_KEY)              // 使用密钥签名
                 .compact();                        // 生成 Token 字符串
     }
@@ -56,12 +132,12 @@ public class JwtUtil {
     public static String generateRefreshToken(Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtConstants.USER_ID_KEY, userId);
-        
+
         return Jwts.builder()
                 .claims(claims)                    // 设置 Payload
                 .subject(String.valueOf(userId))   // 设置 subject
                 .issuedAt(new Date())              // 设置签发时间
-                .expiration(new Date(System.currentTimeMillis() + JwtConstants.REFRESH_TOKEN_EXPIRE_TIME))  // 设置过期时间（3天）
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_TIME))  // 设置过期时间（默认 7 天）
                 .signWith(SECRET_KEY)              // 使用密钥签名
                 .compact();                        // 生成 Token 字符串
     }
