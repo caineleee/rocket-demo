@@ -2,6 +2,8 @@ package org.lee.rocket.train.gateway.filter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.lee.rocket.train.common.constant.JwtConstants;
 import org.lee.rocket.train.common.util.JwtUtil;
 import org.lee.rocket.train.common.model.Result;
@@ -43,6 +45,7 @@ import java.util.List;
  * - Redis 操作要用 ReactiveStringRedisTemplate（响应式）
  * - 不能用 JwtInterceptor（那是 Servlet 体系的）
  */
+@Slf4j
 @Component
 public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
 
@@ -50,8 +53,11 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
     private final ObjectMapper objectMapper;
     
     /**
-     * AntPath 路径匹配器
-     * 支持 AntPath 模式匹配，如 /goods/**、/coupon/*/
+     * AntPath 路径匹配器，支持通配符路径匹配（如 goods 多级路径、coupon 单级路径）。
+     *
+     * 【踩坑】Javadoc 注释里不要写字面量的通配路径（星号紧跟斜杠的形式），
+     * 因为编译器会把"星号+斜杠"当成注释结束符，导致注释提前关闭、字段声明变成孤立代码而编译失败。
+     */
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
@@ -85,6 +91,13 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        // 【是否剥离 Authorization 头】
+        // 默认剥离：避免下游服务持有可用登录凭证（被日志/链路追踪泄露）。
+        // 但 /user/logout 例外：user-service 的 UserController.logout 需要读取 Access Token 才能将其加入
+        // Redis 黑名单。若剥离，登出会"假成功"——返回 200 但 Token 仍可用（复测：登出后再请求 /user/info 仍 200）。
+        // 因此登出接口保留 Authorization 供下游读取并拉黑。
+        boolean stripAuthorization = !"/user/logout".equals(path);
+
         // ===== 2. 从请求头中获取 Token =====
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(JwtConstants.TOKEN_PREFIX)) {
@@ -95,11 +108,14 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
 
         // ===== 3. 验证 Token 签名和过期时间 =====
+        // 【优化】原 getUserIdFromToken + getUserNameFromToken 各解析一次 Token（签名验证+解析跑两遍），
+        //        改为只调用一次 parseToken，直接从 Claims 取用户信息，减少一半 HMAC 计算与 JSON 解析
         Long userId;
         String userName;
         try {
-            userId = JwtUtil.getUserIdFromToken(token);
-            userName = JwtUtil.getUserNameFromToken(token);
+            Claims claims = JwtUtil.parseToken(token);
+            userId = claims.get(JwtConstants.USER_ID_KEY, Long.class);
+            userName = claims.get(JwtConstants.USER_NAME_KEY, String.class);
             if (userId == null) {
                 return unauthorizedResponse(exchange, "Invalid token");
             }
@@ -117,14 +133,36 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
                     }
 
                     // ===== 5. 验证通过，将用户信息放入请求头 =====
-                    // 下游服务可以通过请求头获取用户信息，不需要再次解析 JWT
+                    // 【安全】移除原 X-Token 透传（下游 UserInfoInterceptor 不消费，却会被日志/链路追踪泄露完整 Token）；
+                    //        剥离 Authorization 头，避免下游持有可用登录凭证。
+                    //        注意：白名单接口（如 /user/refresh）不走此分支，其 Authorization 保留供下游读取。
                     ServerHttpRequest mutatedRequest = request.mutate()
-                            .header("X-User-Id", String.valueOf(userId))
-                            .header("X-User-Name", userName != null ? userName : "")
-                            .header("X-Token", token)
+                            .headers(h -> {
+                                h.set("X-User-Id", String.valueOf(userId));
+                                h.set("X-User-Name", userName != null ? userName : "");
+                                if (stripAuthorization) {
+                                    h.remove(HttpHeaders.AUTHORIZATION);
+                                }
+                            })
                             .build();
 
                     // 继续执行过滤器链中下一个过滤器，传递修改后的请求头
+                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                })
+                // 【修复】原 Redis 不可用时错误直接传播 → 网关 500，所有非白名单请求失败（单点故障放大）。
+                //        改为 fail-open：黑名单查询失败时放行（JWT 签名/过期已验证，风险仅限已登出 Token 短暂可用），
+                //        并重新注入用户信息头，避免下游拿不到用户上下文。
+                .onErrorResume(e -> {
+                    log.warn("Redis 黑名单查询失败, fail-open 放行: {}", e.getMessage());
+                    ServerHttpRequest mutatedRequest = request.mutate()
+                            .headers(h -> {
+                                h.set("X-User-Id", String.valueOf(userId));
+                                h.set("X-User-Name", userName != null ? userName : "");
+                                if (stripAuthorization) {
+                                    h.remove(HttpHeaders.AUTHORIZATION);
+                                }
+                            })
+                            .build();
                     return chain.filter(exchange.mutate().request(mutatedRequest).build());
                 });
     }
