@@ -53,6 +53,7 @@ public class UserController {
         }
 
         // 根据手机号查询用户
+        @SuppressWarnings("null")
         User user = userService.lambdaQuery().eq(User::getUserMobile, userMobile).one();
         if (user == null) {
             return Result.error("用户不存在");

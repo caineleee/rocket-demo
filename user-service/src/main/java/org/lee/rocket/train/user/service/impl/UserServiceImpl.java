@@ -74,6 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 查询订单（余额日志使用情况），判定需要走扣减还是回退逻辑
         Long count = userMoneyLogMapper.countByCompositeKey(userMoneyLog);
+        @SuppressWarnings("null")
         User user = getById(userMoneyLog.getUserId());
         if (user == null) {
             CastException.cast(ResultCode.USER_NO_EXIST);
@@ -86,6 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 CastException.cast(ResultCode.USER_MONEY_REDUCE_FAIL);
             }
             // NPE 防御：userMoney 是 Long 包装类型，DB 中可能为 NULL
+            @SuppressWarnings("null")
             Long currentMoney = Objects.requireNonNull(user.getUserMoney(),
                     "用户余额为空，数据异常");
             // 余额校验：扣减后不能为负数
@@ -116,6 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 CastException.cast(ResultCode.USER_MONEY_REFUND_ALREADY);
             }
             // NPE 防御
+            @SuppressWarnings("null")
             Long currentMoney = Objects.requireNonNull(user.getUserMoney(),
                     "用户余额为空，数据异常");
             // 回退用户余额

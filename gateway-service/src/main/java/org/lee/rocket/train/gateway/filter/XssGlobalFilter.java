@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class XssGlobalFilter implements GlobalFilter, Ordered {
 
+    @SuppressWarnings("null")
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -91,7 +92,9 @@ public class XssGlobalFilter implements GlobalFilter, Ordered {
             String key = urlDecode(kv[0]);
             String value = kv.length > 1 ? urlDecode(kv[1]) : "";
             // HTML 转义（防 XSS）
+            @SuppressWarnings("null")
             String escapedKey = HtmlUtils.htmlEscape(key);
+            @SuppressWarnings("null")
             String escapedValue = HtmlUtils.htmlEscape(value);
             // URL 编码回拼，确保转义产生的 & # ; 等字符不破坏 URI 结构
             if (sb.length() > 0) {

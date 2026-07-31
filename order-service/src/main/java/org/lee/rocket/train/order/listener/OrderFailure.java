@@ -53,6 +53,7 @@ public class OrderFailure implements RocketMQListener<MessageExt> {
 
             MQEntity mqEntity = JSONObject.parseObject(body, MQEntity.class);
             // 查询订单
+            @SuppressWarnings("null")
             Order order = orderService.lambdaQuery().eq(Order::getOrderId, mqEntity.getOrderId()).one();
             // 【修复】NPE 防御：订单不存在时直接抛业务异常，避免 order.getOrderStatus() NPE
             if (order == null) {

@@ -287,6 +287,7 @@ public class RedisAspect {
      * @return 方法执行结果
      * @throws Throwable 业务异常
      */
+    @SuppressWarnings("null")
     @Around("@annotation(redisDel)")
     public Object handleRedisDel(ProceedingJoinPoint joinPoint, RedisDel redisDel) throws Throwable {
         // 1. 执行业务方法
@@ -399,6 +400,7 @@ public class RedisAspect {
      * @param result 方法返回值
      * @return 表达式解析结果
      */
+    @SuppressWarnings("null")
     private Object evaluateWithResult(String expression, Method method, Object[] args, Object result) {
         // 复用 SpelSecurityFilter 的安全检查
         org.springframework.expression.ExpressionParser parser =
@@ -446,6 +448,7 @@ public class RedisAspect {
      * @param paramName 参数名
      * @return 参数索引（-1 表示未找到）
      */
+    @SuppressWarnings("null")
     private int findParamIndex(ProceedingJoinPoint joinPoint, String paramName) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Parameter[] parameters = signature.getMethod().getParameters();

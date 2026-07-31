@@ -9,8 +9,6 @@ import org.apache.rocketmq.spring.annotation.MessageModel;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.lee.rocket.train.api.ICouponService;
-import org.lee.rocket.train.common.constant.code.ResultCode;
-import org.lee.rocket.train.common.exception.CastException;
 import org.lee.rocket.train.service.entity.Coupon;
 import org.lee.rocket.train.service.entity.MQEntity;
 import org.springframework.stereotype.Component;
@@ -55,6 +53,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
                 Long couponId = mqEntity.getCouponId();
                 // 回退优惠券状态：加 WHERE is_used = true 条件
                 // 只回退已使用的券，靠 DB 行锁保证幂等性（重复回退时 update 0 行）
+                @SuppressWarnings("null")
                 boolean success = couponService.update(
                         null,
                         new LambdaUpdateWrapper<Coupon>()

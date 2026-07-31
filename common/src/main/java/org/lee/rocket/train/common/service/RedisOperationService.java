@@ -126,6 +126,7 @@ public class RedisOperationService {
         long start = System.currentTimeMillis();
         try {
             // 从 Redis 获取 JSON 字符串
+            @SuppressWarnings("null")
             String json = redisTemplate.opsForValue().get(key);
             if (json == null) {
                 // 缓存未命中
@@ -166,6 +167,7 @@ public class RedisOperationService {
      * @param ttl 过期时间（秒），0 表示永不过期
      * @param maxSize 大 Key 阈值（字节）
      */
+    @SuppressWarnings("null")
     public void set(String key, Object value, int ttl, int maxSize) {
         long start = System.currentTimeMillis();
         try {
@@ -304,8 +306,10 @@ public class RedisOperationService {
      * @param ttl 过期时间（秒），0 表示永不过期
      * @return 自增/自减后的值
      */
+    @SuppressWarnings("null")
     public long incrBy(String key, long delta, int ttl) {
         try {
+            @SuppressWarnings("null")
             Long result = redisTemplate.opsForValue().increment(key, delta);
             if (result == null) {
                 throw new CustomerException(ResultCode.REDIS_OPERATION_ERROR);

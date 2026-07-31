@@ -55,6 +55,7 @@ public class PaymentListener implements RocketMQListener<MessageExt> {
 
             Payment payment = JSON.parseObject(body, Payment.class);
             // 查询订单数据
+            @SuppressWarnings("null")
             Order order = ordersService.lambdaQuery().eq(Order::getOrderId, payment.getOrderId()).one();
             if (order == null) {
                 log.error("PaymentListener 订单不存在，订单ID: {}", payment.getOrderId());

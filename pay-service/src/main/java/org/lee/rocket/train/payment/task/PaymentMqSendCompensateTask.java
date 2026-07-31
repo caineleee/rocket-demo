@@ -43,6 +43,7 @@ public class PaymentMqSendCompensateTask {
         LocalDateTime thresholdTime = LocalDateTime.now().minusMinutes(COMPENSATE_THRESHOLD_MINUTES);
 
         // 查询支付回调中 MQ 发送失败的记录
+        @SuppressWarnings("null")
         List<MqMessageProducer> failedPaymentMessages = mqMessageProducerService.lambdaQuery()
                 .eq(MqMessageProducer::getMsgStatus, 2)
                 .lt(MqMessageProducer::getCreateTime, thresholdTime)

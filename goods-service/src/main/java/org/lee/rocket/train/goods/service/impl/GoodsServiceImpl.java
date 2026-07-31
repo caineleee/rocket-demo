@@ -68,6 +68,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
      * @param goodsStocksLog 扣减库存日志
      * @return Result
      */
+    @SuppressWarnings("null")
     @RedisIncr(
             key = "#goodsStocksLog.goodsId",
             prefix = "goods:stock",

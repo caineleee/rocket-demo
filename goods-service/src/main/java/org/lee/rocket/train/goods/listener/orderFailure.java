@@ -58,6 +58,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
     @Resource
     private IGoodsStocksLogService goodsStocksLogService;
 
+    @SuppressWarnings("null")
     @Override
     public void onMessage(MessageExt messageExt) {
         String msgId = messageExt.getMsgId();
@@ -87,6 +88,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
                         return;
                     }
                     // 乐观锁更新数据：只有当状态仍然是"失败"时才更新
+                    @SuppressWarnings("null")
                     int updateRows = mqConsumerLogMapper.update(
                             null,
                             new LambdaUpdateWrapper<MqConsumerLog>()
@@ -124,6 +126,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
             Long orderId = mqEntity.getOrderId();
 
             // 幂等性检查：如果库存操作日志已存在，说明业务已处理过，直接标记成功
+            @SuppressWarnings("null")
             long existCount = goodsStocksLogService.lambdaQuery()
                     .eq(GoodsStocksLog::getGoodsId, goodsId)
                     .eq(GoodsStocksLog::getOrderId, orderId)
@@ -139,6 +142,7 @@ public class orderFailure implements RocketMQListener<MessageExt> {
                 return;
             }
 
+            @SuppressWarnings("null")
             Goods goods = goodsService.lambdaQuery().eq(Goods::getGoodsId, goodsId).one();
             if (goods == null) {
                 CastException.cast(ResultCode.GOODS_NO_EXIST);

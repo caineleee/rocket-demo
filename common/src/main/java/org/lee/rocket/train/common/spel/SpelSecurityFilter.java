@@ -96,6 +96,7 @@ public class SpelSecurityFilter {
      * @return 表达式解析结果
      * @throws CustomerException 如果表达式包含危险调用
      */
+    @SuppressWarnings("null")
     public static Object evaluate(String expression, Method method, Object[] args) {
         // 1. 安全检查：检查表达式是否包含黑名单关键字
         checkSecurity(expression);
@@ -161,6 +162,7 @@ public class SpelSecurityFilter {
      */
     private static String[] getParameterNames(Method method) {
         // 使用 Spring 的 ParameterNameDiscoverer 获取真实参数名
+        @SuppressWarnings("null")
         String[] paramNames = PARAM_NAME_DISCOVERER.getParameterNames(method);
         if (paramNames != null) {
             return paramNames;

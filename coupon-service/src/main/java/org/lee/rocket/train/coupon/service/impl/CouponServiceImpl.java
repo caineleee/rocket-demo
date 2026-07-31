@@ -46,6 +46,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         }
         // 条件更新：只有 is_used = false 的优惠券才能被扣减
         // 靠 DB 行锁保证原子性，避免并发场景下同一张券被多次扣减
+        @SuppressWarnings("null")
         boolean success = lambdaUpdate()
                 .eq(Coupon::getCouponId, coupon.getCouponId())
                 .eq(Coupon::getIsUsed, false)

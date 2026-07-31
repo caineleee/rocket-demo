@@ -178,6 +178,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
      * 检查路径是否在白名单中
      * 使用 AntPathMatcher 支持 AntPath 模式匹配（如 /goods/**、/user/*）
      */
+    @SuppressWarnings("null")
     private boolean isWhiteListed(String path) {
         return WHITE_LIST.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
@@ -191,6 +192,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
      * @param message 错误提示信息
      * @return Mono<Void> 响应式编程中的空返回，表示响应已完成
      */
+    @SuppressWarnings("null")
     private Mono<Void> unauthorizedResponse(ServerWebExchange exchange, String message) {
         // 1. 从 exchange 中获取 ServerHttpResponse 对象，用于构建HTTP响应
         ServerHttpResponse response = exchange.getResponse();
@@ -213,6 +215,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             
             // 7. 使用响应的 bufferFactory 创建 DataBuffer，包装字节数组
             // DataBuffer 是 WebFlux 中用于处理二进制数据的抽象
+            @SuppressWarnings("null")
             DataBuffer buffer = response.bufferFactory().wrap(bytes);
             
             // 8. 将 DataBuffer 写入响应体，并返回 Mono<Void> 表示响应写入完成

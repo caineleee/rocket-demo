@@ -20,6 +20,7 @@ public interface UserMoneyLogMapper extends BaseMapper<UserMoneyLog> {
      * @param entity UserMoneyLog
      * @return
      */
+    @SuppressWarnings("null")
     default UserMoneyLog selectByCompositeKey(UserMoneyLog entity) {
         return selectOne(new LambdaQueryWrapper<UserMoneyLog>()
                 .eq(UserMoneyLog::getUserId, entity.getUserId())
@@ -33,6 +34,7 @@ public interface UserMoneyLogMapper extends BaseMapper<UserMoneyLog> {
      * @param entity UserMoneyLog
      * @return
      */
+    @SuppressWarnings("null")
     default Long countByCompositeKey(UserMoneyLog entity) {
         return selectCount(new LambdaQueryWrapper<UserMoneyLog>()
                 .eq(UserMoneyLog::getUserId, entity.getUserId())
@@ -46,6 +48,7 @@ public interface UserMoneyLogMapper extends BaseMapper<UserMoneyLog> {
      * @param entity UserMoneyLog
      * @return
      */
+    @SuppressWarnings("null")
     default int updateByCompositeKey(UserMoneyLog entity) {
         return update(entity, new LambdaUpdateWrapper<UserMoneyLog>()
                 .eq(UserMoneyLog::getUserId, entity.getUserId())
@@ -59,6 +62,7 @@ public interface UserMoneyLogMapper extends BaseMapper<UserMoneyLog> {
      * @param entity UserMoneyLog
      * @return
      */
+    @SuppressWarnings("null")
     default int deleteByCompositeKey(UserMoneyLog entity) {
         return delete(new LambdaQueryWrapper<UserMoneyLog>()
                 .eq(UserMoneyLog::getUserId, entity.getUserId())
