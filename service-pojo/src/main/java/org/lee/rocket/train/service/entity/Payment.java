@@ -20,7 +20,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @ToString
-@TableName("tb_order_payment")
+@TableName("tb_payment")
 public class Payment implements Serializable {
 
     private static final long serialVersionUID = 1L;
