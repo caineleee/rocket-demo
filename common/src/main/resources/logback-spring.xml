@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  共享日志配置（common 模块，所有微服务复用）
+  ============================================================================
+  设计目标（解决"随便一个异常就撑爆磁盘"的痛点）：
+  1. totalSizeCap 保证磁盘永不被日志撑爆——即使某个框架陷入高频重试循环
+     （如 Dubbo 缓存锁重试），日志文件最多 200MB 就开始覆盖旧文件，磁盘恒定有界。
+  2. 框架包降噪（dubbo/nacos/spring/rocketmq/netty/mybatis 统一 WARN）——
+     根因之一是 6 个服务同时开 DEBUG 框架日志，基数过大。
+  3. 业务包 org.lee.rocket.train 保持 INFO——调试时该有的信息都在。
+  4. 控制台只输出 INFO+，被外部进程捕获的 stdout 不会再因 DEBUG 暴涨。
+  5. 真正的日志落到有界滚动文件 logs/${appName}.log，调试时 tail 该文件即可。
+
+  运维约定：
+  - 通过 spring-boot:run 跑服务时，stdout 重定向到 /dev/null（> /dev/null 2>&1），
+    避免被捕获到无界的 job 日志文件；调试读 logs/<service>.log。
+  - "报错即停服务" 只作为调试习惯，磁盘防护完全交给 totalSizeCap 自动兜底。
+  ============================================================================
+-->
+<configuration>
+    <!-- 引入 Spring Boot 默认日志配置（保留基础默认值） -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- 从 Spring 环境读取应用名，用作日志文件名，便于区分各服务 -->
+    <springProperty name="appName" source="spring.application.name" defaultValue="app"/>
+
+    <!-- ================================================================== -->
+    <!-- 控制台 Appender：只输出 INFO+，避免 DEBUG/SQL 刷屏                     -->
+    <!-- （DEBUG 级别的 SQL 等只进文件，不进控制台，减少被捕获的 stdout 量）       -->
+    <!-- ================================================================== -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.core.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ================================================================== -->
+    <!-- 滚动文件 Appender：核心防护                                          -->
+    <!-- 单文件 10MB / 保留 7 天 / 总上限 200MB（超出后自动删除最旧文件）       -->
+    <!-- ================================================================== -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/${appName}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 归档文件名：按天 + 序号，便于排查 -->
+            <fileNamePattern>logs/${appName}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 单个日志文件最大 10MB，超过则滚动切分 -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- 保留最近 7 天的归档日志 -->
+            <maxHistory>7</maxHistory>
+            <!-- 所有日志文件总大小上限 200MB——磁盘防护的核心，超出自动清理最旧 -->
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ================================================================== -->
+    <!-- 框架包降噪：统一 WARN，砍掉 DEBUG/INFO 级别的框架刷屏                 -->
+    <!-- ================================================================== -->
+    <logger name="org.apache.dubbo" level="WARN"/>
+    <logger name="com.alibaba.nacos" level="WARN"/>
+    <logger name="com.alibaba.cloud" level="WARN"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.cloud" level="WARN"/>
+    <logger name="org.springframework.boot" level="WARN"/>
+    <logger name="org.apache.rocketmq" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.mybatis" level="WARN"/>
+    <logger name="com.baomidou" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="com.alibaba.druid" level="WARN"/>
+
+    <!-- ================================================================== -->
+    <!-- 业务包：保持 INFO，业务调试信息可见                                  -->
+    <!-- ================================================================== -->
+    <logger name="org.lee.rocket.train" level="INFO"/>
+
+    <!-- ================================================================== -->
+    <!-- 根日志：INFO，同时输出到控制台和有界文件                              -->
+    <!-- ================================================================== -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

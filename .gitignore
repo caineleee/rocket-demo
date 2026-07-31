@@ -70,6 +70,10 @@ build/
 ### Rocket Log ###
 data/
 
+### 服务运行日志（logback-spring.xml 滚动输出 + 临时运行日志，不入库）###
+logs/
+run.log
+
 # 忽略本地Nacos连接配置
 **/application-local.properties
 
