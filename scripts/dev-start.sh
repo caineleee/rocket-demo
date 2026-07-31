@@ -57,6 +57,16 @@ echo "    MYSQL_HOST=${MYSQL_HOST:-localhost}"
 # 关闭 Spring Boot Docker Compose 自动管理
 export SPRING_DOCKER_COMPOSE_ENABLED=false
 
+# 禁用 Nacos 客户端默认 logback 配置（避免与项目 logback-spring.xml 冲突：
+# "already has an associated action supplier"）
+# 必须用 JVM 系统属性，比 application.yml 的 nacos.logging.default.config.enabled 早生效
+# （Nacos 客户端在 Spring environment 准备前就静态初始化 logback 适配器）
+# 同时指定 Nacos 本地缓存目录到项目内 .nacos-cache（默认 ~/nacos 在 macOS 沙箱下可能不可写，
+# 且不污染 home 目录；.nacos-cache 已在 .gitignore）
+export NACOS_CACHE_DIR="$ROOT_DIR/.nacos-cache"
+mkdir -p "$NACOS_CACHE_DIR"
+export JAVA_TOOL_OPTIONS="-Dnacos.logging.default.config.enabled=false -DJM.SNAPSHOT.PATH=$NACOS_CACHE_DIR"
+
 # 3. 启动服务
 echo "==> [3/3] 启动 $SERVICE ..."
 
