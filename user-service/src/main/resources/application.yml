@@ -58,7 +58,7 @@ spring:
     # Sentinel 限流熔断
     sentinel:
       transport:
-        dashboard: localhost:8858
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
         # 当前服务与 Dashboard 通信的端口（Dashboard 会主动连接这个端口拉取规则）
         port: 8720
       eager: true
@@ -75,8 +75,10 @@ server:
 # IdWorker 配置（分布式ID生成器）
 # ========================================
 id-worker:
-  worker-id: 1
-  datacenter-id: 1
+  # 每个服务分配不同的 worker-id，避免 Snowflake 生成的 ID 冲突
+  # （多服务共享同一数据库表时，相同 worker-id 会产生重复主键）
+  worker-id: ${ID_WORKER_ID:1}
+  datacenter-id: ${ID_DATACENTER_ID:1}
 
 # ========================================
 # MyBatis-Plus 配置
@@ -144,6 +146,10 @@ dubbo:
   consumer:
     # 禁用 Dubbo 启动时服务检查（开发环境使用，避免依赖服务未启动导致失败）
     check: false
+    # 消费者超时 3 秒（默认 1 秒太短，DB 慢查询容易超时）
+    timeout: 3000
+    # 重试次数设为 0：updateMoneyPaid 等扣减操作是非幂等的，超时重试会导致重复扣款
+    retries: 0
   protocol:
     name: dubbo
     port: -1

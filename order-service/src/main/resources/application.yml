@@ -58,7 +58,7 @@ spring:
     # Sentinel 限流熔断
     sentinel:
       transport:
-        dashboard: localhost:8858
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
         # 当前服务与 Dashboard 通信的端口
         port: 8721
       eager: true
@@ -134,7 +134,7 @@ rocketmq:
 mq:
   order-failure:
     consumer:
-      group: order-cancel-consumer-group
+      group: order-order-cancel-group
   # 支付成功消费
   payment:
     consumer:
@@ -176,6 +176,9 @@ dubbo:
     check: false
     # 设置消费者超时时间为 3 秒（默认 1 秒太短，容易超时）
     timeout: 3000
+    # 重试次数设为 0：调用的 reduceStock/reduceCoupon/updateMoneyPaid 都是非幂等操作，
+    # 超时重试会导致重复扣库存/扣券/扣款
+    retries: 0
   protocol:
     name: dubbo
     port: -1

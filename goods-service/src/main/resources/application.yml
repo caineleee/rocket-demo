@@ -58,7 +58,7 @@ spring:
     # Sentinel 限流熔断
     sentinel:
       transport:
-        dashboard: localhost:8858
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
         # 当前服务与 Dashboard 通信的端口
         port: 8722
       eager: true
@@ -109,7 +109,8 @@ rocketmq:
   # 订单确认失败回滚消费者组
   consumer:
     order-failure:
-      group: order-cancel-consumer-group
+      # 每个服务使用独立的 consumer group，避免 BROADCASTING 模式下 offset 文件冲突
+      group: goods-order-cancel-group
 
 # 订单失败主题（供 @Value("${mq.topics.order-failure}") 注入）
 mq:
