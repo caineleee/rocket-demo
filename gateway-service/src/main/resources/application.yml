@@ -1,97 +1,52 @@
+# ============================================================
+# gateway-service 本地配置（仅加载 shared-spring-dev.yaml + shared-sentinel-dev.yaml；无 DB/Dubbo/MQ）
+# ============================================================
 spring:
   application:
     name: gateway-service
+  config:
+    import:
+      - optional:nacos:shared-spring-dev.yaml
+      - optional:nacos:shared-sentinel-dev.yaml
   cloud:
-    # ========================================
-    # Nacos Discovery 配置（服务注册与发现）
-    # ========================================
-    # Gateway 需要注册到 Nacos，才能通过服务名（lb://service-name）转发请求
     nacos:
-      discovery:
-        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        namespace: public
-      # 禁用 Nacos Config（不从 Nacos 读取配置）
       config:
-        enabled: false
-    # ========================================
-    # Gateway 路由配置
-    # ========================================
-    # 路由规则：将请求路径转发到对应的微服务
-    # 格式：/service-name/** → lb://service-name
-    # 示例：/order/create → lb://order-service
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: rocket-demo
+      discovery:
+        namespace: rocket-demo
     gateway:
       routes:
-        # 订单服务路由
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/order/**
-
-        # 商品服务路由
         - id: goods-service
           uri: lb://goods-service
           predicates:
             - Path=/goods/**
-
-        # 用户服务路由
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/user/**
-
-        # 支付服务路由
         - id: pay-service
           uri: lb://pay-service
           predicates:
             - Path=/pay/**
-
-        # 优惠券服务路由
         - id: coupon-service
           uri: lb://coupon-service
           predicates:
             - Path=/coupon/**
-
-      # ========================================
-      # 默认过滤器配置
-      # ========================================
       default-filters:
-        # 降级错误处理（当服务不可用时返回友好提示）
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-
-    # ========================================
-    # Sentinel 配置
-    # ========================================
     sentinel:
       transport:
-        # Sentinel Dashboard 地址（可通过环境变量 SENTINEL_DASHBOARD 覆盖）
-        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
-        # 当前服务与 Dashboard 通信的端口
         port: 8719
-      # 启用 Sentinel 立即加载（首次访问时才初始化，加快启动速度）
-      eager: true
-      # 启用 HTTP 方法区分，让 Sentinel 区分同一 URL 路径的不同 HTTP 方法（GET/POST/PUT/DELETE）
-      http-method-specify: true
 
-  # ========================================
-  # Redis 配置（用于 JWT Token 验证）
-  # ========================================
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-# ========================================
-# 服务端口配置
-# ========================================
 server:
   port: 8080
 
-# ========================================
-# 日志配置
-# ========================================
+# 日志级别统一交给 common 的 logback-spring.xml 管理（不要长期留 DEBUG）
 logging:
   level:
     root: INFO
-    # 日志级别统一交给 common 模块的 logback-spring.xml 管理（框架包 WARN、业务包 INFO、文件 totalSizeCap 200MB）
-    # 不要在此长期留 DEBUG——曾因 gateway 包开 DEBUG 导致 6 服务同跑时 stdout 撑爆磁盘 20GB。
-    # 如需临时调试网关路由，启动参数加：--logging.level.org.springframework.cloud.gateway=DEBUG，用完即撤。

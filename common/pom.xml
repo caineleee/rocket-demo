@@ -18,6 +18,13 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
+        <!-- Sentinel 数据源 Nacos：让应用从 Nacos 拉取限流规则（shared-sentinel-dev.yaml 使用）
+             版本由 spring-cloud-alibaba-dependencies BOM 管理 -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
