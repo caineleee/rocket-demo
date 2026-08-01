@@ -82,3 +82,5 @@ run.log
 
 # 忽略 Nacos 客户端本地缓存（dev-start.sh 通过 JM.SNAPSHOT.PATH 指向此处）
 .nacos-cache/
+
+docs/*
