@@ -14,6 +14,7 @@ spring:
       - optional:nacos:shared-mq-dev.yaml
       - optional:nacos:shared-idworker-dev.yaml
       - optional:nacos:shared-sentinel-dev.yaml
+      - optional:nacos:shared-seata-client-dev.yaml
   cloud:
     nacos:
       config:
@@ -36,7 +37,8 @@ dubbo:
 rocketmq:
   producer:
     group: goods-producer-group
-  # 每个服务独立 consumer group，避免 BROADCASTING 模式下 offset 文件冲突
-  consumer:
-    order-failure:
-      group: goods-order-cancel-group
+  # order-failure 消费者组已移除（Seata AT 全局事务回滚替代 MQ 失败补偿）
+
+# Seata 客户端配置（共享部分从 Nacos shared-seata-client-dev.yaml 加载，本地仅留服务专属的 application-id）
+seata:
+  application-id: ${spring.application.name}

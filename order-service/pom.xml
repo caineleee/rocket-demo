@@ -91,6 +91,12 @@
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
         </dependency>
 
+        <!-- Seata 分布式事务（AT 模式，版本由 SCA BOM 管理 = 2.1.0，与 TC 2.0.0 兼容） -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+        </dependency>
+
         <!-- ======================================== -->
         <!-- OpenFeign 依赖（HTTP 服务调用） -->
         <!-- ======================================== -->

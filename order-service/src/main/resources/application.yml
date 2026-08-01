@@ -14,6 +14,7 @@ spring:
       - optional:nacos:shared-mq-dev.yaml
       - optional:nacos:shared-idworker-dev.yaml
       - optional:nacos:shared-sentinel-dev.yaml
+      - optional:nacos:shared-seata-client-dev.yaml
   cloud:
     nacos:
       config:
@@ -47,15 +48,14 @@ rocketmq:
     group: order-producer-group
 
 # RocketMQ 消费者组与主题（order 自定义业务属性，供 @Value 注入）
+# order-failure 相关配置已移除（Seata AT 全局事务回滚替代 MQ 失败补偿）
 mq:
-  order-failure:
-    consumer:
-      group: order-order-cancel-group
   payment:
     consumer:
       group: payment-consumer-group
   topics:
     payment: pay-topic
-  tags:
-    # '*' 在 YAML 中是别名指示符，必须加引号
-    order-failure: '*'
+
+# Seata 客户端配置（共享部分从 Nacos shared-seata-client-dev.yaml 加载，本地仅留服务专属的 application-id）
+seata:
+  application-id: ${spring.application.name}

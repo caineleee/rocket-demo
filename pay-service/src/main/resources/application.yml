@@ -37,9 +37,7 @@ rocketmq:
     group: pay-producer-group
   consumer:
     group: pay-consumer-group
-    # 订单确认失败回滚消费者组
-    order-failure:
-      group: order-cancel-consumer-group
+  # order-failure 消费者组已移除（Seata AT 全局事务回滚替代 MQ 失败补偿，pay 走 MQ 异步不在同步全局事务内）
   topics:
     pay: pay-topic
   tags:

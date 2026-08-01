@@ -1,17 +1,12 @@
 package org.lee.rocket.train.order.service.impl;
 
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.incrementer.DefaultIdentifierGenerator;
+import io.seata.spring.annotation.GlobalTransactional;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.rocketmq.client.exception.MQBrokerException;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.remoting.exception.RemotingException;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.lee.rocket.train.common.constant.code.ResultCode;
 import org.lee.rocket.train.common.constant.status.CouponStatus;
 import org.lee.rocket.train.common.constant.status.OrderStatus;
@@ -25,7 +20,6 @@ import org.lee.rocket.train.order.mapper.OrderMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.lee.rocket.train.service.entity.Coupon;
 import org.lee.rocket.train.service.entity.GoodsStocksLog;
-import org.lee.rocket.train.service.entity.MQEntity;
 import org.lee.rocket.train.service.entity.Order;
 import org.lee.rocket.train.service.entity.User;
 import org.lee.rocket.train.service.entity.UserMoneyLog;
@@ -34,7 +28,6 @@ import org.lee.rocket.train.api.IGoodsService;
 import org.lee.rocket.train.api.IOrdersService;
 import org.lee.rocket.train.service.entity.Goods;
 import org.lee.rocket.train.api.IUserService;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 
@@ -62,79 +55,42 @@ public class OrdersServiceImpl extends ServiceImpl<OrderMapper, Order> implement
     @Resource
     private DefaultIdentifierGenerator idWorker;
 
-    @Value("${mq.topics.order-failure}")
-    private String topic;
-
-    @Value("${mq.tags.order-failure}")
-    private String tags;
-
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
-
     /**
-     * 确认订单 (创建订单)
+     * 确认订单（创建订单）—— Seata 全局事务入口（TM）
+     * <p>
+     * 【事务边界】confirmOrder 是 TM，通过 Dubbo 同步调用 goods/coupon/user 三个 RM：
+     * <ul>
+     *   <li>reduceStock → goods-service（RM，扣减库存）</li>
+     *   <li>reduceCoupun → coupon-service（RM，扣减优惠券）</li>
+     *   <li>reduceMoneyPaid → user-service（RM，扣减余额）</li>
+     *   <li>updateOrderStatus → order 自身本地事务（RM，订单状态流转）</li>
+     * </ul>
+     * 任意 RM 抛异常 → Seata 全局回滚（undo_log 反向 SQL 自动恢复），无需 MQ 失败补偿。
+     * 异常冒泡到 GlobalExceptionHandler 统一转 Result 返回前端。
+     * <p>
+     * 【原 MQ 补偿已移除】原 try-catch 捕获异常后发 order-failure MQ 消息触发异步回退，
+     * 现由 Seata AT 模式同步回滚替代（更可靠、无消息丢失风险）。
+     *
      * @param order 订单信息
-     * @return
+     * @return 结果
      */
+    @GlobalTransactional(rollbackFor = Exception.class, timeoutMills = 60000)
     @Override
     public Result<?> confirmOrder(Order order) {
-        // 校验订单
+        // 校验订单（商品/用户/价格/库存）
         checkOrder(order);
-        // 生成预订单(用户不可见)
-        // Long preOrderId = savePreOrder(order);
+        // 生成预订单（用户不可见，本地事务）
         savePreOrder(order);
-        try {
-            // 扣减库存
-            reduceStock(order);
-            // 使用优惠券
-            reduceCoupun(order);
-            // 扣减余额
-            reduceMoneyPaid(order);
-            // 确认订单
-            updateOrderStatus(order);
-            // 返回成功状态
-            return Result.success();
-        } catch (Exception e) {
-            // 确认订单失败,发送消息
-            // 订单ID 优惠券ID 用户ID 用户余额 商品ID 商品数量
-            MQEntity mqEntity = new MQEntity()
-                    .setOrderId(order.getOrderId())
-                    .setCouponId(order.getCouponId())
-                    .setUserId(order.getUserId())
-                    .setGoodsId(order.getGoodsId())
-                    .setGoodsNumber(order.getGoodsNumber())
-                    .setUserMoney(order.getMoneyPaid());
-            try {
-                failureOrder(topic, tags, order.getOrderId().toString(), JSON.toJSONString(mqEntity));
-            } catch (Exception ex) {
-                // 订单回退消息发送失败
-                log.error("订单确认失败, RocketMQ 回退失败 --- 订单: {} 优惠券: {} 用户: {} 用户余额: {} 商品: {} 商品数量: {}",
-                        order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
-                        order.getGoodsId(), order.getGoodsNumber());
-                log.error("RocketMQ 回退消息发送异常", ex);
-                // MQ 消息状态码（写库用）不能当响应码返回，改用 MQ_SEND_MESSAGE_FAIL 响应码
-                return Result.fail(ResultCode.MQ_SEND_MESSAGE_FAIL);
-            }
-            // 订单回退消息发送成功
-            log.error("订单确认失败,mq 回退--- 订单: {} 优惠券: {} 用户: {} 用户余额: {} 商品: {} 商品数量: {}",
-                    order.getOrderId(), order.getCouponId(), order.getUserId(), order.getMoneyPaid(),
-                    order.getGoodsId(), order.getGoodsNumber());
-            // 返回失败状态
-            return Result.fail(ResultCode.ORDER_CONFIRM_FAIL);
-        }
-    }
-
-    /**
-     * 发送订单失败 mq 消息
-     * @param topic 主题
-     * @param tag 标签
-     * @param keys 业务唯一键
-     * @param messageBody 消息体
-     */
-    private void failureOrder(String topic, String tag, String keys, String messageBody) throws MQBrokerException, RemotingException, InterruptedException, MQClientException {
-        Message message = new Message(topic, tag, keys, messageBody.getBytes());
-        rocketMQTemplate.getProducer().send(message);
-
+        // 扣减库存（RM: goods-service，Dubbo 同步调用，XID 自动传播）
+        reduceStock(order);
+        // 使用优惠券（RM: coupon-service）
+        reduceCoupun(order);
+        // 扣减余额（RM: user-service）
+        reduceMoneyPaid(order);
+        // 确认订单（本地事务：NO_CONFIRM → CONFIRMED）
+        updateOrderStatus(order);
+        // 全局事务提交（TM 通知 TC，TC 通知各 RM 提交分支）
+        return Result.success();
     }
 
     /**
