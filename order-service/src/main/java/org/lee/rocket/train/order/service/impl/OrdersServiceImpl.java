@@ -2,7 +2,7 @@ package org.lee.rocket.train.order.service.impl;
 
 
 import com.baomidou.mybatisplus.core.incrementer.DefaultIdentifierGenerator;
-import io.seata.spring.annotation.GlobalTransactional;
+import org.apache.seata.spring.annotation.GlobalTransactional;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
