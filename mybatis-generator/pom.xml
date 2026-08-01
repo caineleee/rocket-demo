@@ -16,27 +16,24 @@
     <properties>
         <java.version>21</java.version>
     </properties>
-    
+
     <dependencies>
-        <!-- MyBatis-Plus Generator -->
+        <!-- MyBatis-Plus 代码生成器（根据数据库表生成 Entity/Mapper/Service） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
-            <version>3.5.16</version>
         </dependency>
 
-        <!-- MyBatis-Plus Core（Generator 的依赖） -->
+        <!-- MyBatis-Plus Core（Generator 的依赖，实体/注解定义） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>
-            <version>3.5.16</version>
         </dependency>
 
-        <!-- Freemarker 模板引擎 -->
+        <!-- Freemarker 模板引擎（代码生成器模板渲染） -->
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.33</version>
         </dependency>
 
         <!-- SLF4J 日志框架（MyBatis-Plus Generator 需要） -->
@@ -44,7 +41,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        
+
         <!-- SLF4J Simple 实现（简单的控制台日志输出） -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -59,14 +56,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- Lombok：@Data/@Slf4j 等代码生成 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
     </dependencies>
-
-
 
 </project>

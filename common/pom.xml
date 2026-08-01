@@ -13,6 +13,7 @@
 	<description>Common Module - Shared Configuration and Constants</description>
 
 	<dependencies>
+        <!-- Nacos Config：从 Nacos 拉取共享配置（shared-*.yaml），版本由 SCA BOM 管理 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
@@ -30,17 +31,20 @@
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
+        <!-- Lombok：@Slf4j/@Data 等代码生成，编译期生效不打入 jar -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
 
+        <!-- SLF4J：日志门面 API（实现由各服务 logback 提供） -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Spring Data Redis：Redis 操作（Token 黑名单/Refresh Token 存储） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
@@ -50,7 +54,6 @@
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
-            <version>3.36.0</version>
         </dependency>
 
         <!-- Micrometer：监控埋点（Counter/Timer），与 Spring Boot Actuator 集成 -->
@@ -65,6 +68,7 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!-- Spring Web：Servlet MVC（provided，由各业务服务提供实现） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -74,18 +78,15 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.5</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.5</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.5</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -93,7 +94,6 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
-            <version>2.14.3</version>
         </dependency>
 
         <!-- OpenFeign：用于 Feign 拦截器传递用户上下文 -->
@@ -118,9 +118,11 @@
         <dependency>
             <groupId>me.paulschwarz</groupId>
             <artifactId>springboot3-dotenv</artifactId>
-            <!-- 显式指定 version：dependencyManagement(BOM)不传递到 transitive 依赖解析，
-                 common 作为 jar 被 user-service 等引用时，若不写 version 会报
-                 "dependencies.dependency.version is missing"，common 自身 pom 被判定 invalid。 -->
+            <!-- 必须显式指定 version（Maven transitive 限制，属合理例外）：
+                 common 作为 jar 被 user-service 等引用时，Maven 校验 common 的 installed 原始 pom，
+                 若 dependency 缺 version 即判 invalid（transitive 不可用），即使父 pom 的 BOM 已管理也不补。
+                 实测去 version 后 user-service 报 'dependencies.dependency.version is missing'。
+                 版本变量 ${spring-dotenv.version} 仍集中在父 pom properties 统一管理。 -->
             <version>${spring-dotenv.version}</version>
         </dependency>
 
