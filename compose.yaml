@@ -327,6 +327,28 @@ services:
     networks:
       - rocket-demo-net
 
+  # ==================== Seata TC Server（分布式事务协调器） ====================
+  seata-ts:
+    image: seataio/seata-server:2.0.0
+    container_name: seata-ts
+    # SEATA_IP：注册到 Nacos 的 IP（默认注册容器 IP=172.18.x.x，宿主机客户端连不上）
+    # 设为 127.0.0.1 → 客户端从 Nacos 拿到 127.0.0.1:8091，走宿主机端口映射连到容器
+    environment:
+      - SEATA_IP=127.0.0.1
+    ports:
+      - "7091:7091"   # Web 控制台
+      - "8091:8091"   # 事务协调端口（客户端通过 Nacos 发现或 grouplist=127.0.0.1:8091 连接）
+    volumes:
+      # TC 配置文件：registry/config 指向 Nacos（rocket-demo 命名空间）
+      - ./seata/application.yml:/seata-server/resources/application.yml
+      # 事务会话存储持久化（store.mode=file）
+      - seata-logs:/root/logs/seata
+    depends_on:
+      - nacos
+    restart: unless-stopped
+    networks:
+      - rocket-demo-net
+
 
 # ==================== 自定义网络 ====================
 networks:
@@ -341,4 +363,6 @@ volumes:
   nacos-data:
   # Sentinel Dashboard 日志卷
   sentinel-logs:
+  # Seata TC Server 日志 + 事务会话存储卷
+  seata-logs:
 

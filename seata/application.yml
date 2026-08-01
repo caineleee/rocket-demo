@@ -1,0 +1,74 @@
+# Seata TC Server 配置
+# 基于 seataio/seata-server:2.0.0 镜像默认 application.yml
+# 仅将 registry / config 指向 Nacos（rocket-demo 命名空间），其余保持官方默认
+#
+# 【配置分层】
+# 1. 本文件（TC 本地）：seata.config.nacos.* / seata.registry.nacos.* / seata.security.* / seata.store.*（默认值）
+#    - config.nacos.* 和 registry.nacos.* 必须本地（鸡生蛋问题：TC 得先知道 Nacos 地址才能拉配置）
+#    - security.* 必须本地（Seata 2.0 控制台鉴权，少了 jwtTokenUtils Bean 起不来）
+#    - store.* 保留默认值（Nacos 共享配置 shared-seata-dev.yaml 中的同名项优先级更高）
+# 2. Nacos shared-seata-dev.yaml（rocket-demo/DEFAULT_GROUP）：store / service / transaction / transport
+#    - 由 Seata ConfigurationFactory 加载，key 不带 seata. 前缀
+server:
+  port: 7091
+
+spring:
+  application:
+    name: seata-ts
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    path: ${log.home:${user.home}/logs/seata}
+  extend:
+    logstash-appender:
+      destination: 127.0.0.1:4560
+    kafka-appender:
+      bootstrap-servers: 127.0.0.1:9092
+      topic: logback_to_logstash
+
+console:
+  user:
+    username: seata
+    password: seata
+
+seata:
+  # ==================== 配置中心 - Nacos ====================
+  # ConfigurationFactory 根据 data-id 后缀(.yaml)自动按 YAML 解析
+  # TC Server 得先连上 Nacos 才能拉配置 → 连 Nacos 的参数必须写本地（鸡生蛋）
+  config:
+    type: nacos
+    nacos:
+      server-addr: nacos:8848
+      namespace: rocket-demo
+      group: DEFAULT_GROUP
+      data-id: shared-seata-dev.yaml
+
+  # ==================== 注册中心 - Nacos ====================
+  # 客户端通过 registry 找到 TC Server
+  # application=seata-ts 与容器名一致，客户端 registry.nacos.application 也配 seata-ts
+  registry:
+    type: nacos
+    nacos:
+      application: seata-ts
+      server-addr: nacos:8848
+      namespace: rocket-demo
+      group: DEFAULT_GROUP
+      cluster: default
+
+  # ==================== 事务存储 - file 模式（开发环境默认） ====================
+  # Nacos 共享配置 shared-seata-dev.yaml 中的 store 同名项优先级更高
+  # 保留本地默认值作为 Nacos 不可用时的兜底
+  store:
+    # support: file 、 db 、 redis 、 raft
+    mode: file
+    file:
+      dir: ${log.home:${user.home}/logs/seata}/sessionStore
+
+  # ==================== 安全配置（Seata 2.0 必须） ====================
+  # 少了 security 块 → jwtTokenUtils Bean 创建失败 → TC 起不来
+  security:
+    secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+    tokenValidityInMilliseconds: 1800000
+    ignore:
+      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.jpeg,/**/*.ico,/api/v1/auth/login,/metadata/v1/**
